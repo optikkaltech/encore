@@ -23,15 +23,31 @@
     # health check endpoint for railway
     rewrite /health /*
 
-    # serve from the 'dist' folder (Vite builds into 'dist')
-    root * dist
+    # ── API reverse proxy ───────────────────────────────────────────────────
+    # All /api/* requests are forwarded to the backend over Railway's
+    # private internal network (encore.railway.internal).
+    # The browser never exposes or needs the backend's public URL.
+    handle /api/* {
+        reverse_proxy encore.railway.internal:3000 {
+            header_up Host {upstream_hostport}
+            header_up X-Real-IP {remote_host}
+            header_up X-Forwarded-For {remote_host}
+            header_up X-Forwarded-Proto {scheme}
+        }
+    }
 
-    # enable gzip compression
-    encode gzip
+    # ── Static SPA ──────────────────────────────────────────────────────────
+    handle {
+        # serve from the 'dist' folder (Vite builds into 'dist')
+        root * dist
 
-    # serve static files
-    file_server
+        # enable gzip compression
+        encode gzip
 
-    # SPA fallback — any path not found falls back to index.html for React Router
-    try_files {path} /index.html
+        # serve static files
+        file_server
+
+        # SPA fallback — any path not found falls back to index.html for React Router
+        try_files {path} /index.html
+    }
 }
