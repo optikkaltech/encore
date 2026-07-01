@@ -19,6 +19,7 @@ import {
   MerchantStatus,
   PricingTier,
 } from '../../shared/enums';
+import { hashEmail } from '../../common/utils/security.utils';
 
 export interface JwtPayload {
   sub: string; // merchantId
@@ -64,7 +65,7 @@ export class AuthService {
     email: string,
     password: string,
   ): Promise<Merchant | null> {
-    const merchant = await this.merchantRepo.findOne({ where: { email } });
+    const merchant = await this.merchantRepo.findOne({ where: { emailHash: hashEmail(email) } });
 
     if (!merchant) {
       return null;
@@ -154,7 +155,7 @@ export class AuthService {
     businessType: string,
   ): Promise<Merchant> {
     // Check existing
-    const existing = await this.merchantRepo.findOne({ where: { email } });
+    const existing = await this.merchantRepo.findOne({ where: { emailHash: hashEmail(email) } });
     if (existing) {
       throw new ConflictException('Email already registered');
     }
@@ -176,6 +177,7 @@ export class AuthService {
       merchantCode,
       businessName,
       email,
+      emailHash: hashEmail(email),
       passwordHash,
       phone,
       businessType: businessType as any,
@@ -249,7 +251,7 @@ export class AuthService {
     }
 
     // Check if email exists (link accounts)
-    merchant = await this.merchantRepo.findOne({ where: { email } });
+    merchant = await this.merchantRepo.findOne({ where: { emailHash: hashEmail(email) } });
 
     if (merchant) {
       // Link Google to existing account
@@ -274,6 +276,7 @@ export class AuthService {
       googleId,
       businessName,
       email,
+      emailHash: hashEmail(email),
       // No password for OAuth users
       passwordHash: '',
       pricingTier: PricingTier.STARTER,
@@ -375,7 +378,7 @@ export class AuthService {
    * Request password reset
    */
   async requestPasswordReset(email: string): Promise<void> {
-    const merchant = await this.merchantRepo.findOne({ where: { email } });
+    const merchant = await this.merchantRepo.findOne({ where: { emailHash: hashEmail(email) } });
 
     if (!merchant) {
       // Don't reveal if email exists

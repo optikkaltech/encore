@@ -46,6 +46,14 @@ export class Merchant {
   })
   email: string;
 
+  /**
+   * Keyed SHA-256 hash of the email — used for lookups since the email
+   * column is AES-GCM encrypted with a random IV (not directly searchable).
+   * NDPR safe: hash alone cannot reveal the original email without the key.
+   */
+  @Column({ type: 'varchar', length: 64, nullable: true, unique: true })
+  emailHash: string;
+
   @Column({ type: 'varchar', length: 255 })
   passwordHash: string;
 

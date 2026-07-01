@@ -27,7 +27,7 @@ import {
 } from '../../shared/enums';
 import { AuditService } from '../../core/audit';
 import { SecureLogger } from '../../common/services/secure-logger.service';
-import { encryptAtRest, sanitizeUrl } from '../../common/utils/security.utils';
+import { encryptAtRest, sanitizeUrl, hashEmail } from '../../common/utils/security.utils';
 import { PricingTierConfig } from '../../config/pricing.config';
 import { SystemConfigService } from '../system-config/system-config.service';
 import { Transaction } from '../billing/entities/transaction.entity';
@@ -53,9 +53,9 @@ export class MerchantsService implements OnApplicationBootstrap {
    * - Sends verification email
    */
   async register(dto: RegisterMerchantDto): Promise<Merchant> {
-    // Check for existing email
+    // Check for existing email using hash for lookup
     const existing = await this.merchantRepo.findOne({
-      where: { email: dto.email },
+      where: { emailHash: hashEmail(dto.email) },
     });
     if (existing) {
       throw new ConflictException('Email already registered');
@@ -86,6 +86,7 @@ export class MerchantsService implements OnApplicationBootstrap {
         merchantCode,
         businessName: dto.businessName,
         email: dto.email,
+        emailHash: hashEmail(dto.email),
         passwordHash,
         phone: dto.phone,
         businessType: dto.businessType,
@@ -526,7 +527,7 @@ export class MerchantsService implements OnApplicationBootstrap {
    */
   async createDemoAccount(dto: RegisterMerchantDto): Promise<Merchant> {
     const existing = await this.merchantRepo.findOne({
-      where: { email: dto.email },
+      where: { emailHash: hashEmail(dto.email) },
     });
     if (existing) {
       throw new ConflictException('Email already registered');
@@ -540,6 +541,7 @@ export class MerchantsService implements OnApplicationBootstrap {
     const merchant = this.merchantRepo.create({
       businessName: dto.businessName,
       email: dto.email,
+      emailHash: hashEmail(dto.email),
       passwordHash,
       phone: dto.phone,
       businessType: dto.businessType,
@@ -600,7 +602,7 @@ export class MerchantsService implements OnApplicationBootstrap {
    * Find by email (for login)
    */
   async findByEmail(email: string): Promise<Merchant | null> {
-    return this.merchantRepo.findOne({ where: { email } });
+    return this.merchantRepo.findOne({ where: { emailHash: hashEmail(email) } });
   }
 
   /**

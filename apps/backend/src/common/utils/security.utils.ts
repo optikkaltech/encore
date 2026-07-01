@@ -28,6 +28,20 @@ export function hashSensitiveData(data: string, salt?: string): string {
 }
 
 /**
+ * Produce a deterministic keyed hash of an email address for DB lookups.
+ * The email column is AES-GCM encrypted with a random IV and cannot be
+ * searched directly — this hash is stored alongside it for findOne queries.
+ * Always normalise to lowercase before hashing.
+ */
+export function hashEmail(email: string): string {
+  const salt = process.env.HASH_SALT || 'encore-default-salt';
+  return createHash('sha256')
+    .update(email.toLowerCase().trim() + salt)
+    .digest('hex');
+}
+
+
+/**
  * Encrypt data at rest (two-way, reversible).
  * Use for: PII storage, API keys, sensitive configuration.
  */
