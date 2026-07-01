@@ -57,6 +57,18 @@ client.interceptors.response.use(
   async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
+    // Auth endpoints should NEVER trigger auto-logout — let callers handle
+    // errors themselves (e.g. login page showing "Invalid credentials")
+    const isAuthEndpoint = [
+      API_ENDPOINTS.AUTH.LOGIN,
+      API_ENDPOINTS.AUTH.REGISTER,
+      API_ENDPOINTS.AUTH.REFRESH,
+    ].some((endpoint) => originalRequest?.url?.includes(endpoint));
+
+    if (isAuthEndpoint) {
+      return Promise.reject(error);
+    }
+
     // If 401 and not already retrying
     if (error.response?.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
@@ -77,7 +89,7 @@ client.interceptors.response.use(
       const refreshToken = useAuthStore.getState().refreshToken;
 
       if (!refreshToken) {
-        // No refresh token - force logout
+        // No refresh token — user session truly expired, force logout
         useAuthStore.getState().logout();
         isRefreshing = false;
         return Promise.reject(error);

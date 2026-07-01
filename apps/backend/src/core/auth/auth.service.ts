@@ -394,10 +394,14 @@ export class AuthService {
 
     // Send reset email
     try {
+      this.logger.log(
+        `[PasswordReset] Sending to=${email} provider=${process.env.EMAIL_PROVIDER} frontendUrl=${process.env.FRONTEND_URL}`,
+      );
       await this.emailService.sendPasswordResetEmail(email, resetToken);
+      this.logger.log(`[PasswordReset] Email dispatched to ${email}`);
     } catch (error: any) {
       this.logger.error(
-        `Failed to send password reset email to ${email}: ${error.message}`,
+        `[PasswordReset] FAILED to send email to ${email}: ${error.message}`,
         error.stack,
       );
     }
