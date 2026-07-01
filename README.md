@@ -40,6 +40,11 @@ Encore solves this with a complete, automated billing infrastructure:
 
 ---
 
+## Login Credentials: 
+Email hemmyhteccreatives@gmail.com
+Password: DevStage@123
+Website Url: https://encore-staging.up.railway.app/login
+
 ## Core Modules
 
 | Module | Purpose |
