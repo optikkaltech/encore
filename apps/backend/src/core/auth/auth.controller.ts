@@ -73,7 +73,11 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @Audit({ action: 'AUTH_LOGIN', entityType: 'merchant', severity: 'normal' })
   async login(@Body() dto: LoginDto) {
-    return this.authService.login(dto.email, dto.password);
+    const result = await this.authService.login(dto.email, dto.password);
+    return {
+      success: true,
+      data: result,
+    };
   }
 
   /**
