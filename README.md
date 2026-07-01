@@ -130,10 +130,6 @@ encore/
 │       ├── src/          # Application source
 │       ├── public/       # Static assets
 │       └── package.json
-├── doc/
-│   ├── Encore_PRD_v1.0.md        # Product Requirements Document
-│   ├── ui-specification.md       # UI/UX specification
-│   └── encore_architecture.png  # Architecture diagram
 ├── .cursorrules          # Cursor AI rules
 ├── .gitignore
 └── README.md
@@ -258,14 +254,5 @@ Encore uses the Nomba API for all money movement. No payment data is stored on E
 
 ---
 
-## Documentation
-
-| Document | Description |
-|---|---|
-| [`doc/Encore_PRD_v1.0.md`](./doc/Encore_PRD_v1.0.md) | Full Product Requirements Document |
-| [`doc/ui-specification.md`](./doc/ui-specification.md) | UI/UX specification and screen flows |
-| [`doc/encore_architecture.png`](./doc/encore_architecture.png) | System architecture diagram |
-
----
-
-*Encore — v1.0 — June 2026 — Powered by Nomba API*
+*Encore — v1.0 — 1st July 2026 — Powered by Nomba API*
+*Developed by Emmanuel Kolawole*
