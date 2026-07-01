@@ -1,0 +1,37 @@
+# global options
+{
+    admin off             # no need for admin api in railway's environment
+    persist_config off    # storage isn't persistent anyway
+    auto_https off        # railway handles https, this would cause issues if left enabled
+    # runtime logs
+    log {
+        format json
+    }
+    # server options
+    servers {
+        trusted_proxies static private_ranges 100.0.0.0/8 # trust railway's proxy
+    }
+}
+
+# site block — listens on $PORT (automatically assigned by railway, defaults to 3000)
+:{$PORT:3000} {
+    # access logs
+    log {
+        format json
+    }
+
+    # health check endpoint for railway
+    rewrite /health /*
+
+    # serve from the 'dist' folder (Vite builds into 'dist')
+    root * dist
+
+    # enable gzip compression
+    encode gzip
+
+    # serve static files
+    file_server
+
+    # SPA fallback — any path not found falls back to index.html for React Router
+    try_files {path} /index.html
+}
