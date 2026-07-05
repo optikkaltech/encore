@@ -73,6 +73,13 @@ export class StorageService {
     folder: string,
     entityId: string,
   ): Promise<UploadResult> {
+    // Normalize buffer (handles Uint8Array, serialized JSON buffers, etc.)
+    const normalizedBuffer = this.getBuffer(file.buffer);
+    if (!normalizedBuffer) {
+      throw new BadRequestException('Invalid file buffer');
+    }
+    file.buffer = normalizedBuffer;
+
     // Validate file
     this.validateFile(file);
 
@@ -358,5 +365,22 @@ export class StorageService {
     } catch {
       return 443;
     }
+  }
+
+  private getBuffer(buffer: any): Buffer | null {
+    if (!buffer) return null;
+    if (Buffer.isBuffer(buffer)) {
+      return buffer;
+    }
+    if (buffer instanceof Uint8Array) {
+      return Buffer.from(buffer);
+    }
+    if (buffer.type === 'Buffer' && Array.isArray(buffer.data)) {
+      return Buffer.from(buffer.data);
+    }
+    if (Array.isArray(buffer)) {
+      return Buffer.from(buffer);
+    }
+    return null;
   }
 }
