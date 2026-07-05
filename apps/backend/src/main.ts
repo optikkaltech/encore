@@ -1,4 +1,5 @@
 import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { ConfigService } from '@nestjs/config';
 import { ValidationPipe } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
@@ -19,11 +20,14 @@ import { AppModule } from './app.module';
  * 6. Graceful shutdown - Clean resource release
  */
 async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create(AppModule, {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     logger: ['error', 'warn', 'log', 'debug'],
     // Disable default powered-by header
     cors: false, // We'll configure CORS manually
   });
+
+  // Trust proxy headers (e.g. X-Forwarded-Proto, X-Forwarded-Host) set by Railway ingress
+  app.set('trust proxy', 1);
 
   const config = app.get(ConfigService);
   const port = config.get('app.port') || 3000;
