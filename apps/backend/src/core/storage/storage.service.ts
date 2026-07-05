@@ -22,6 +22,7 @@ export interface UploadedFile {
   mimetype: string;
   size: number;
   buffer: Buffer;
+  path?: string;
 }
 
 export interface UploadResult {
@@ -73,6 +74,15 @@ export class StorageService {
     folder: string,
     entityId: string,
   ): Promise<UploadResult> {
+    // If buffer is missing but path is present (disk storage fallback)
+    if (!file.buffer && file.path) {
+      try {
+        file.buffer = fs.readFileSync(file.path);
+      } catch (error) {
+        this.logger.error(`Failed to read file from disk path: ${file.path}`, error);
+      }
+    }
+
     // Normalize buffer (handles Uint8Array, serialized JSON buffers, etc.)
     const normalizedBuffer = this.getBuffer(file.buffer);
     if (!normalizedBuffer) {
