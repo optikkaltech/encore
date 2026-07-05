@@ -10,9 +10,11 @@ import {
   Response as Res,
   HttpCode,
   HttpStatus,
+  NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import type { Response } from 'express';
 import { PortalGuard } from './guards/portal.guard';
 import { PortalPdfService } from './portal-pdf.service';
@@ -20,7 +22,8 @@ import { Invoice } from '../billing/entities/invoice.entity';
 import { Transaction } from '../billing/entities/transaction.entity';
 import { Subscriber } from './entities/subscriber.entity';
 import { Subscription } from './entities/subscription.entity';
-import { SubscriptionStatus, PaymentMethod } from '../../shared/enums';
+import { SubscriptionStatus, PaymentMethod, PaymentStatus } from '../../shared/enums';
+import { NombaService } from '../../core/nomba/nomba.service';
 import { Public } from '../../common/decorators/security.decorators';
 import { IsString, IsOptional, IsEnum } from 'class-validator';
 
@@ -63,6 +66,7 @@ export class PortalDataController {
     @InjectRepository(Subscription)
     private readonly subscriptionRepo: Repository<Subscription>,
     private readonly pdfService: PortalPdfService,
+    private readonly nombaService: NombaService,
   ) {}
 
   /** GET /portal/me — subscriber profile + active subscription summary */
@@ -182,7 +186,14 @@ export class PortalDataController {
   async pauseSubscription(@Request() req: any) {
     const sub: Subscriber = req.user;
     const active = await this.subscriptionRepo.findOne({
-      where: { subscriberId: sub.id, status: SubscriptionStatus.ACTIVE },
+      where: {
+        subscriberId: sub.id,
+        status: In([
+          SubscriptionStatus.ACTIVE,
+          SubscriptionStatus.TRIAL,
+          SubscriptionStatus.PAST_DUE,
+        ]),
+      },
     });
     if (!active) return { message: 'No active subscription to pause' };
 
@@ -202,7 +213,15 @@ export class PortalDataController {
   async cancelSubscription(@Request() req: any) {
     const sub: Subscriber = req.user;
     const active = await this.subscriptionRepo.findOne({
-      where: { subscriberId: sub.id, status: SubscriptionStatus.ACTIVE },
+      where: {
+        subscriberId: sub.id,
+        status: In([
+          SubscriptionStatus.ACTIVE,
+          SubscriptionStatus.TRIAL,
+          SubscriptionStatus.PAST_DUE,
+          SubscriptionStatus.PAUSED,
+        ]),
+      },
     });
     if (!active) return { message: 'No active subscription to cancel' };
 
@@ -218,5 +237,106 @@ export class PortalDataController {
       message:
         'Subscription cancelled. Access ends at the close of your current period.',
     };
+  }
+
+  /** POST /portal/payments/:id/pay — manually charge pending transaction using card/mandate */
+  @Post('payments/:id/pay')
+  @HttpCode(HttpStatus.OK)
+  async payPendingTransaction(
+    @Param('id') id: string,
+    @Request() req: any,
+  ) {
+    const sub: Subscriber = req.user;
+    
+    // Find transaction
+    const transaction = await this.transactionRepo.findOne({
+      where: { id, subscriberId: sub.id },
+    });
+    
+    if (!transaction) {
+      throw new NotFoundException('Transaction not found');
+    }
+    
+    if (transaction.status === PaymentStatus.SUCCESS) {
+      throw new BadRequestException('Transaction is already successfully paid');
+    }
+
+    // Get the latest subscriber details to have access to payment token / mandate
+    const subscriber = await this.subscriberRepo.findOne({
+      where: { id: sub.id },
+    });
+
+    if (!subscriber) {
+      throw new NotFoundException('Subscriber not found');
+    }
+
+    const reference = `pay_retry_${transaction.id}_${Date.now()}`;
+    let paymentSuccess = false;
+    let nombaRef = '';
+
+    try {
+      if (
+        subscriber.paymentMethod === PaymentMethod.CARD &&
+        subscriber.cardToken
+      ) {
+        const res = await this.nombaService.chargeTokenizedCard(
+          subscriber.cardToken,
+          Number(transaction.amount),
+          reference,
+        );
+        paymentSuccess = res.status === 'SUCCESS' || res.status === 'SUCCESSFUL' || res.status === 'APPROVED';
+        nombaRef = res.nombaReference || '';
+      } else if (
+        subscriber.paymentMethod === PaymentMethod.DIRECT_DEBIT &&
+        subscriber.mandateId
+      ) {
+        const res = await this.nombaService.chargeDirectDebit(
+          subscriber.mandateId,
+          Number(transaction.amount),
+          reference,
+        );
+        paymentSuccess = res.status === 'SUCCESS' || res.status === 'SUCCESSFUL' || res.status === 'APPROVED';
+        nombaRef = res.nombaReference || '';
+      } else {
+        throw new BadRequestException(
+          'No saved payment method (tokenized card or direct debit mandate) found. Please update your payment method.'
+        );
+      }
+    } catch (err: any) {
+      throw new BadRequestException(`Payment failed: ${err.message}`);
+    }
+
+    if (paymentSuccess) {
+      // Update transaction status
+      transaction.status = PaymentStatus.SUCCESS;
+      transaction.processedAt = new Date();
+      transaction.nombaReference = nombaRef;
+      await this.transactionRepo.save(transaction);
+
+      // Update associated invoice if present
+      if (transaction.invoiceId) {
+        const invoice = await this.invoiceRepo.findOne({
+          where: { id: transaction.invoiceId },
+        });
+        if (invoice) {
+          invoice.status = 'paid';
+          invoice.paidAt = new Date();
+          await this.invoiceRepo.save(invoice);
+        }
+      }
+      
+      // Mark the subscriber active if they were in failed/dunning status
+      if (subscriber.status !== 'active') {
+        subscriber.status = 'active' as any;
+        await this.subscriberRepo.save(subscriber);
+      }
+
+      return { success: true, message: 'Payment successfully processed' };
+    } else {
+      transaction.status = PaymentStatus.FAILED;
+      transaction.failureMessage = 'Manual charge attempt failed.';
+      await this.transactionRepo.save(transaction);
+      throw new BadRequestException('Payment attempt failed. Please check your card or bank mandate.');
+    }
   }
 }

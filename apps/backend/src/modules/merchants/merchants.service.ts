@@ -271,8 +271,8 @@ export class MerchantsService implements OnApplicationBootstrap {
       const accountId = this.config.get<string>('nomba.accountId');
 
       if (!clientId || !clientSecret || !accountId) {
-        throw new Error(
-          'Nomba credentials not configured. Using fallback checkout.',
+        throw new BadRequestException(
+          'Nomba API credentials are not configured on the server.',
         );
       }
 
@@ -280,6 +280,7 @@ export class MerchantsService implements OnApplicationBootstrap {
         merchant.email,
         orderReference,
         callbackUrl,
+        'card',
       );
 
       return {
@@ -287,19 +288,13 @@ export class MerchantsService implements OnApplicationBootstrap {
         orderReference: order.orderReference,
         isMock: false,
       };
-    } catch (error) {
-      this.logger.warn(
-        `Nomba checkout initiation failed or credentials missing. Redirecting to mock payment portal. Error: ${error.message}`,
+    } catch (error: any) {
+      this.logger.error(
+        `Nomba checkout initiation failed. Error: ${error.message}`,
       );
-
-      // Build mock checkout URL: client-side mock page
-      const mockCheckoutUrl = `${clientUrl}/onboarding/payment/mock-checkout?orderReference=${orderReference}&callbackUrl=${encodeURIComponent(callbackUrl)}`;
-
-      return {
-        checkoutLink: mockCheckoutUrl,
-        orderReference,
-        isMock: true,
-      };
+      throw new BadRequestException(
+        `Failed to initiate Nomba checkout: ${error.message}`,
+      );
     }
   }
 
@@ -595,6 +590,11 @@ export class MerchantsService implements OnApplicationBootstrap {
     if (!merchant) {
       throw new NotFoundException('Merchant not found');
     }
+    // Dynamically query actual subscriber count to stay perfectly in sync
+    const actualSubCount = await this.merchantRepo.manager
+      .getRepository('Subscriber')
+      .count({ where: { merchantId: id } });
+    merchant.currentSubscriberCount = actualSubCount;
     return merchant;
   }
 
@@ -755,4 +755,128 @@ export class MerchantsService implements OnApplicationBootstrap {
     }
     return 'EN' + Date.now().toString().slice(-5);
   }
+
+  /**
+   * Get current merchant settings (merged with defaults)
+   */
+  async getSettings(merchantId: string): Promise<Record<string, unknown>> {
+    const merchant = await this.findOne(merchantId);
+    const defaults = {
+      notifications: { email: true, sms: true },
+      billing: { autoRetry: true, retryAttempts: 3 },
+      webhookUrl: merchant.webhookUrl || null,
+      webhookSecret: merchant.webhookSecret ? '***' : null,
+      payoutBankAccount: null,
+    };
+    return { ...defaults, ...(merchant.settings || {}) };
+  }
+
+  /**
+   * Update merchant settings (webhook, notifications, billing config, payout bank details)
+   */
+  async updateSettings(
+    merchantId: string,
+    dto: { webhookUrl?: string; webhookSecret?: string; notifications?: object; billing?: object; payoutBankAccount?: object },
+  ): Promise<Merchant> {
+    const merchant = await this.findOne(merchantId);
+
+    if (dto.webhookUrl !== undefined) {
+      merchant.webhookUrl = dto.webhookUrl;
+    }
+    if (dto.webhookSecret !== undefined) {
+      merchant.webhookSecret = dto.webhookSecret;
+    }
+
+    merchant.settings = {
+      ...(merchant.settings || {}),
+      ...(dto.notifications !== undefined ? { notifications: dto.notifications } : {}),
+      ...(dto.billing !== undefined ? { billing: dto.billing } : {}),
+      ...(dto.payoutBankAccount !== undefined ? { payoutBankAccount: dto.payoutBankAccount } : {}),
+    };
+
+
+    const saved = await this.merchantRepo.save(merchant);
+
+    await this.audit.log({
+      action: 'MERCHANT_SETTINGS_UPDATE',
+      entityType: 'merchant',
+      entityId: merchantId,
+      merchantId,
+      severity: 'normal',
+    });
+
+    return saved;
+  }
+
+  /**
+   * Update merchant branding (logo, color, custom domain)
+   */
+  async updateBranding(
+    merchantId: string,
+    dto: { brandLogoUrl?: string; brandPrimaryColor?: string; customDomain?: string },
+  ): Promise<Merchant> {
+    const merchant = await this.findOne(merchantId);
+
+    if (dto.brandLogoUrl !== undefined) merchant.brandLogoUrl = dto.brandLogoUrl;
+    if (dto.brandPrimaryColor !== undefined) merchant.brandPrimaryColor = dto.brandPrimaryColor;
+    if (dto.customDomain !== undefined) merchant.customDomain = dto.customDomain;
+
+    const saved = await this.merchantRepo.save(merchant);
+
+    await this.audit.log({
+      action: 'MERCHANT_BRANDING_UPDATE',
+      entityType: 'merchant',
+      entityId: merchantId,
+      merchantId,
+      severity: 'normal',
+    });
+
+    return saved;
+  }
+
+  /**
+   * Update merchant business profile and KYC information.
+   */
+  async updateProfile(
+    merchantId: string,
+    dto: {
+      businessName?: string;
+      phone?: string;
+      registrationNumber?: string;
+      taxId?: string;
+      address?: string;
+      city?: string;
+      state?: string;
+      country?: string;
+    },
+  ): Promise<Merchant> {
+    const merchant = await this.findOne(merchantId);
+
+    if (dto.businessName !== undefined) merchant.businessName = dto.businessName;
+    if (dto.phone !== undefined) merchant.phone = dto.phone;
+    if (dto.registrationNumber !== undefined) merchant.registrationNumber = dto.registrationNumber || null;
+    if (dto.taxId !== undefined) merchant.taxId = dto.taxId || null;
+    if (dto.address !== undefined) merchant.address = dto.address;
+    if (dto.city !== undefined) merchant.city = dto.city;
+    if (dto.state !== undefined) merchant.state = dto.state;
+    if (dto.country !== undefined) merchant.country = dto.country || 'NG';
+
+    // Automatically approve KYC in Sandbox/test mode if basic details are provided
+    if (merchant.registrationNumber && merchant.taxId && merchant.address) {
+      merchant.kycStatus = KycStatus.VERIFIED;
+    }
+
+    const saved = await this.merchantRepo.save(merchant);
+
+    await this.audit.log({
+      action: 'MERCHANT_PROFILE_UPDATE',
+      entityType: 'merchant',
+      entityId: merchantId,
+      merchantId,
+      severity: 'normal',
+    });
+
+    return saved;
+  }
 }
+

@@ -17,6 +17,7 @@ import { Subscriber } from './entities/subscriber.entity';
 import { Merchant } from '../merchants/entities/merchant.entity';
 import { EmailService } from '../../core/email/email.service';
 import { SubscriptionStatus } from '../../shared/enums';
+import { hashEmail } from '../../common/utils/security.utils';
 
 class SelfEnrollDto {
   @IsString()
@@ -95,7 +96,7 @@ export class CheckoutController {
 
     // Check if this email already subscribed to this merchant
     const existing = await this.subscriberRepo.findOne({
-      where: { merchantId: plan.merchantId, email: dto.email },
+      where: { merchantId: plan.merchantId, emailHash: hashEmail(dto.email.toLowerCase().trim()) },
     });
     if (existing) {
       throw new ConflictException(

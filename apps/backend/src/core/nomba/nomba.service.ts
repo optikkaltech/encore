@@ -65,28 +65,43 @@ export class NombaService {
   }
 
   /**
-   * Create Checkout Order for Card Tokenization
+   * Create Checkout Order for Card Tokenization or Bank Linkage
    */
   async createTokenizationOrder(
     customerEmail: string,
     orderReference: string,
     callbackUrl: string,
+    paymentMethod: 'card' | 'direct_debit' = 'card',
   ) {
     const token = await this.getAccessToken();
     const baseUrl = this.config.get<string>('nomba.baseUrl');
     const accountId = this.config.get<string>('nomba.accountId');
 
     try {
+      const orderPayload: Record<string, any> = {
+        amount: 100.0, // ₦100 card/bank validation charge
+        currency: 'NGN',
+        customerEmail: customerEmail,
+        orderReference: orderReference,
+        callbackUrl: callbackUrl,
+      };
+
+      if (paymentMethod === 'direct_debit') {
+        orderPayload.allowedPaymentMethods = ['Transfer'];
+      }
+
+      const requestBody: Record<string, any> = {
+        order: orderPayload,
+      };
+
+      if (paymentMethod === 'card') {
+        orderPayload.tokenizeCard = true;
+        requestBody.tokenizeCard = true;
+      }
+
       const { data } = await axios.post(
         `${baseUrl}/checkout/order`,
-        {
-          amount: 100.0, // ₦100 card validation charge
-          currency: 'NGN',
-          customerEmail: customerEmail,
-          tokenizeCard: true,
-          orderReference: orderReference,
-          callbackUrl: callbackUrl,
-        },
+        requestBody,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -131,6 +146,7 @@ export class NombaService {
       );
 
       const tx = data.data || data;
+      this.logger.log(`Nomba verifyOrder response for ref ${orderReference}: ${JSON.stringify(tx)}`);
       const status = tx.status; // e.g. "SUCCESS", "FAILED"
 
       // In Sandbox mode, if tokenKey isn't present, we auto-generate one for validation flow
@@ -139,11 +155,25 @@ export class NombaService {
         tx.metadata?.tokenKey ||
         `tok_test_card_${Math.random().toString(36).substring(2, 10)}`;
 
+      const cardLastFour =
+        tx.paymentDetails?.card?.last4 ||
+        tx.cardDetails?.last4 ||
+        tx.card?.last4 ||
+        '4242';
+
+      const cardExpiry =
+        tx.paymentDetails?.card?.expiry ||
+        tx.cardDetails?.expiry ||
+        tx.card?.expiry ||
+        '12/28';
+
       return {
         status,
         amount: tx.amount,
         currency: tx.currency,
         tokenKey,
+        cardLastFour,
+        cardExpiry,
       };
     } catch (error: any) {
       const responseData = error.response?.data;
@@ -324,9 +354,11 @@ export class NombaService {
         `${baseUrl}/checkout/tokenized-card-payment`,
         {
           tokenKey,
-          amount,
-          currency: 'NGN',
-          orderReference: reference,
+          order: {
+            amount,
+            currency: 'NGN',
+            orderReference: reference,
+          }
         },
         {
           headers: {
@@ -338,20 +370,24 @@ export class NombaService {
       );
 
       const res = data.data || data;
+      this.logger.log(`Nomba chargeTokenizedCard response: ${JSON.stringify(res)}`);
+      const isSuccess =
+        res.status === true ||
+        res.status === 'true' ||
+        res.status === 'SUCCESS' ||
+        res.status === 'SUCCESSFUL' ||
+        res.status === 'APPROVED' ||
+        res.message === 'success';
       return {
-        status: res.status,
+        status: isSuccess ? 'SUCCESS' : 'FAILED',
         nombaReference:
           res.transactionId || res.paymentReference || `ref_tx_${Date.now()}`,
       };
     } catch (error: any) {
-      const errMsg = error.response?.data?.message || error.message;
-      this.logger.error(
-        `Nomba tokenized card charge failed: ${errMsg}. Falling back to mock outcome.`,
-      );
-      return {
-        status: 'FAILED',
-        nombaReference: `ref_err_tx_${Date.now()}`,
-      };
+      const responseData = error.response?.data;
+      const errMsg = responseData?.description || responseData?.message || error.message;
+      this.logger.error(`Nomba tokenized card charge failed: ${errMsg}`);
+      throw new BadRequestException(`Nomba tokenized card charge failed: ${errMsg}`);
     }
   }
 
@@ -411,20 +447,237 @@ export class NombaService {
       );
 
       const res = data.data || data;
+      this.logger.log(`Nomba chargeDirectDebit response: ${JSON.stringify(res)}`);
+      const isSuccess =
+        res.status === true ||
+        res.status === 'true' ||
+        res.status === 'SUCCESS' ||
+        res.status === 'SUCCESSFUL' ||
+        res.status === 'APPROVED' ||
+        res.message === 'success';
       return {
-        status: res.status,
+        status: isSuccess ? 'SUCCESS' : 'FAILED',
         nombaReference:
           res.transactionId || res.paymentReference || `ref_tx_${Date.now()}`,
       };
     } catch (error: any) {
-      const errMsg = error.response?.data?.message || error.message;
-      this.logger.error(
-        `Nomba direct debit charge failed: ${errMsg}. Falling back to mock outcome.`,
+      const responseData = error.response?.data;
+      const errMsg = responseData?.description || responseData?.message || error.message;
+      this.logger.error(`Nomba direct debit charge failed: ${errMsg}`);
+      throw new BadRequestException(`Nomba direct debit charge failed: ${errMsg}`);
+    }
+  }
+
+  /**
+   * Get supported banks list from Nomba
+   */
+  async getBanks(): Promise<{ code: string; name: string }[]> {
+    const clientId = this.config.get<string>('nomba.clientId');
+    const clientSecret = this.config.get<string>('nomba.clientSecret');
+    const accountId = this.config.get<string>('nomba.accountId');
+
+    const isMock = !clientId || !clientSecret || !accountId;
+
+    if (isMock) {
+      this.logger.warn('Nomba credentials not configured. Simulating banks list.');
+      return [
+        { code: '044', name: 'Access Bank' },
+        { code: '058', name: 'Guaranty Trust Bank (GTB)' },
+        { code: '011', name: 'First Bank of Nigeria' },
+        { code: '033', name: 'United Bank for Africa (UBA)' },
+        { code: '057', name: 'Zenith Bank' },
+        { code: '999993', name: 'Moniepoint' },
+        { code: '999992', name: 'Opay' },
+        { code: '999991', name: 'PalmPay' },
+        { code: '999994', name: 'Kuda Bank' },
+      ];
+    }
+
+    try {
+      const token = await this.getAccessToken();
+      const baseUrl = this.config.get<string>('nomba.baseUrl');
+
+      const { data } = await axios.get(`${baseUrl}/transfers/banks`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          accountId,
+        },
+      });
+
+      const res = data.data || data;
+      if (Array.isArray(res)) {
+        return res.map((b: any) => ({
+          code: b.bankCode || b.code,
+          name: b.bankName || b.name,
+        }));
+      }
+      if (res.banks && Array.isArray(res.banks)) {
+        return res.banks.map((b: any) => ({
+          code: b.bankCode || b.code,
+          name: b.bankName || b.name,
+        }));
+      }
+      return [];
+    } catch (error: any) {
+      this.logger.error(`Failed to fetch banks list from Nomba: ${error.message}`);
+      throw new BadRequestException(`Failed to retrieve bank list: ${error.message}`);
+    }
+  }
+
+  /**
+   * Perform bank account lookup (name enquiry)
+   */
+  async resolveBankAccount(
+    accountNumber: string,
+    bankCode: string,
+  ): Promise<{ accountName: string; accountNumber: string; bankCode: string }> {
+    const clientId = this.config.get<string>('nomba.clientId');
+    const clientSecret = this.config.get<string>('nomba.clientSecret');
+    const accountId = this.config.get<string>('nomba.accountId');
+
+    const isMock = !clientId || !clientSecret || !accountId;
+
+    if (isMock) {
+      this.logger.warn('Nomba credentials not configured. Simulating account lookup.');
+      if (accountNumber.length !== 10) {
+        throw new BadRequestException('Account number must be 10 digits');
+      }
+      return {
+        accountName: 'TEST ACCOUNT NAME',
+        accountNumber,
+        bankCode,
+      };
+    }
+
+    try {
+      const token = await this.getAccessToken();
+      const baseUrl = this.config.get<string>('nomba.baseUrl');
+
+      const { data } = await axios.post(
+        `${baseUrl}/transfers/bank/lookup`,
+        {
+          accountNumber,
+          bankCode,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            accountId,
+            'Content-Type': 'application/json',
+          },
+        },
+      );
+
+      const res = data.data || data;
+      this.logger.log(`Nomba resolveBankAccount response: ${JSON.stringify(res)}`);
+
+      if (!res.accountName) {
+        throw new BadRequestException(
+          res.description || res.message || 'Could not resolve bank account details',
+        );
+      }
+
+      return {
+        accountName: res.accountName,
+        accountNumber: res.accountNumber || accountNumber,
+        bankCode: res.bankCode || bankCode,
+      };
+    } catch (error: any) {
+      const responseData = error.response?.data;
+      const errMsg =
+        responseData?.description || responseData?.message || error.message;
+      this.logger.error(`Nomba bank account lookup failed: ${errMsg}`);
+      throw new BadRequestException(`Nomba bank account lookup failed: ${errMsg}`);
+    }
+  }
+
+  /**
+   * Transfer funds to a bank account (merchant payout disbursement)
+   */
+  async transferFunds(
+    amount: number,
+    accountNumber: string,
+    bankCode: string,
+    accountName: string,
+    reference: string,
+    narration = 'Encore Payout',
+  ): Promise<{ status: string; nombaReference: string; transactionId: string }> {
+    const clientId = this.config.get<string>('nomba.clientId');
+    const clientSecret = this.config.get<string>('nomba.clientSecret');
+    const accountId = this.config.get<string>('nomba.accountId');
+
+    const isMock = !clientId || !clientSecret || !accountId;
+
+    if (isMock) {
+      this.logger.warn(
+        `Nomba credentials not configured. Simulating bank transfer for ref: ${reference}`,
       );
       return {
-        status: 'FAILED',
-        nombaReference: `ref_err_tx_${Date.now()}`,
+        status: 'SUCCESS',
+        nombaReference: `ref_mock_transfer_${Date.now()}`,
+        transactionId: `tx_mock_${Date.now()}`,
       };
+    }
+
+    try {
+      const token = await this.getAccessToken();
+      const baseUrl = this.config.get<string>('nomba.baseUrl') || 'https://sandbox.nomba.com/v1';
+
+      // Map baseUrl /v1 suffix to /v2 transfers endpoint
+      const transferUrl = baseUrl.includes('/v1')
+        ? `${baseUrl.replace('/v1', '')}/v2/transfers/bank`
+        : `${baseUrl}/v2/transfers/bank`;
+
+      const { data } = await axios.post(
+        transferUrl,
+        {
+          amount,
+          accountNumber,
+          accountName,
+          bankCode,
+          merchantTxRef: reference,
+          senderName: 'Encore Platform',
+          narration,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            accountId,
+            'Content-Type': 'application/json',
+          },
+        },
+      );
+
+
+      const res = data.data || data;
+      this.logger.log(`Nomba transferFunds response: ${JSON.stringify(res)}`);
+
+      const isSuccess =
+        res.status === true ||
+        res.status === 'true' ||
+        res.status === 'SUCCESS' ||
+        res.status === 'SUCCESSFUL' ||
+        res.status === 'APPROVED' ||
+        res.status === 'PENDING' ||
+        res.status === 'PENDING_BILLING' ||
+        res.message === 'success';
+
+      if (!isSuccess) {
+        throw new BadRequestException(
+          `Transfer failed with status: ${res.status || res.message}`,
+        );
+      }
+
+      return {
+        status: 'SUCCESS',
+        nombaReference: res.paymentReference || res.reference || reference,
+        transactionId: res.transactionId || res.id || `tx_${Date.now()}`,
+      };
+    } catch (error: any) {
+      const responseData = error.response?.data;
+      const errMsg = responseData?.description || responseData?.message || error.message;
+      this.logger.error(`Nomba bank transfer failed: ${errMsg}`);
+      throw new BadRequestException(`Nomba bank transfer failed: ${errMsg}`);
     }
   }
 }

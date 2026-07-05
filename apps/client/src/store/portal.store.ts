@@ -9,8 +9,9 @@ interface PortalState {
   config: PortalConfig | null;
   isAuthenticated: boolean;
   isLoadingConfig: boolean;
+  multipleMerchantsList: any[] | null;
 
-  login: (email: string, password: string, merchantId: string) => Promise<void>;
+  login: (email: string, password: string, merchantId?: string) => Promise<{ multipleMerchants?: boolean; merchants?: any[] } | void>;
   logout: () => void;
   loadConfig: (merchantId: string) => Promise<void>;
   hydrateFromSession: () => void;
@@ -28,6 +29,7 @@ export const usePortalStore = create<PortalState>((set, get) => ({
   config: null,
   isAuthenticated: false,
   isLoadingConfig: false,
+  multipleMerchantsList: null,
 
   hydrateFromSession: () => {
     const token = sessionStorage.getItem('portal_token');
@@ -45,24 +47,31 @@ export const usePortalStore = create<PortalState>((set, get) => ({
 
   login: async (email, password, merchantId) => {
     const result = await portalLogin(email, password, merchantId);
+    if (result.multipleMerchants) {
+      set({ multipleMerchantsList: result.merchants });
+      return { multipleMerchants: true, merchants: result.merchants };
+    }
+
+    const activeMerchantId = result.subscriber.merchantId;
     sessionStorage.setItem('portal_token', result.portalToken);
     sessionStorage.setItem('portal_subscriber', JSON.stringify(result.subscriber));
-    sessionStorage.setItem('portal_merchant_id', merchantId);
+    sessionStorage.setItem('portal_merchant_id', activeMerchantId);
     set({
       portalToken: result.portalToken,
       subscriber: result.subscriber,
-      merchantId,
+      merchantId: activeMerchantId,
+      multipleMerchantsList: null,
       isAuthenticated: true,
     });
     // Load merchant branding after login
-    get().loadConfig(merchantId);
+    get().loadConfig(activeMerchantId);
   },
 
   logout: () => {
     sessionStorage.removeItem('portal_token');
     sessionStorage.removeItem('portal_subscriber');
     sessionStorage.removeItem('portal_merchant_id');
-    set({ portalToken: null, subscriber: null, merchantId: null, isAuthenticated: false, config: null });
+    set({ portalToken: null, subscriber: null, merchantId: null, isAuthenticated: false, config: null, multipleMerchantsList: null });
   },
 
   loadConfig: async (merchantId) => {

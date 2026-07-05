@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Shield, Lock, CreditCard, ChevronRight } from 'lucide-react';
+import { Shield, Lock, CreditCard, ChevronRight, Landmark } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function PaymentMockCheckoutPage() {
@@ -9,6 +9,7 @@ export default function PaymentMockCheckoutPage() {
 
   const orderReference = searchParams.get('orderReference') || `mock_ref_${Date.now()}`;
   const callbackUrl = searchParams.get('callbackUrl') || `${window.location.origin}/onboarding/payment/callback`;
+  const method = searchParams.get('method') || 'card';
 
   // Pre-filled mock details
   const [cardNumber] = useState('5061 1234 5678 9012');
@@ -19,7 +20,7 @@ export default function PaymentMockCheckoutPage() {
   const handlePay = (e: React.FormEvent) => {
     e.preventDefault();
     if (!cardName.trim()) {
-      toast.error('Please enter the cardholder name');
+      toast.error(method === 'direct_debit' ? 'Please enter the account holder name' : 'Please enter the cardholder name');
       return;
     }
 
@@ -31,7 +32,7 @@ export default function PaymentMockCheckoutPage() {
       const url = new URL(callbackUrl);
       url.searchParams.set('status', 'SUCCESS');
       url.searchParams.set('orderReference', orderReference);
-      url.searchParams.set('method', 'card');
+      url.searchParams.set('method', method);
       
       window.location.href = url.toString();
     }, 1500);
@@ -42,7 +43,7 @@ export default function PaymentMockCheckoutPage() {
     const url = new URL(callbackUrl);
     url.searchParams.set('status', 'FAILED');
     url.searchParams.set('orderReference', orderReference);
-    url.searchParams.set('method', 'card');
+    url.searchParams.set('method', method);
     
     window.location.href = url.toString();
   };
@@ -99,7 +100,9 @@ export default function PaymentMockCheckoutPage() {
           
           <div style={{ textAlign: 'right' }}>
             <span style={{ fontSize: 11, color: '#9CA3AF' }}>Amount Due</span>
-            <p style={{ fontSize: 20, fontWeight: 700, color: '#10B981', marginTop: 2 }}>₦100.00</p>
+            <p style={{ fontSize: 20, fontWeight: 700, color: '#10B981', marginTop: 2 }}>
+              {method === 'direct_debit' ? '₦0.00' : '₦100.00'}
+            </p>
           </div>
         </div>
 
@@ -120,7 +123,9 @@ export default function PaymentMockCheckoutPage() {
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
             <span>Description</span>
-            <span style={{ color: '#F3F4F6' }}>Verification & Card Tokenization</span>
+            <span style={{ color: '#F3F4F6' }}>
+              {method === 'direct_debit' ? 'Verification & Bank Setup' : 'Verification & Card Tokenization'}
+            </span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
             <span>Ref</span>
@@ -130,118 +135,211 @@ export default function PaymentMockCheckoutPage() {
           </div>
         </div>
 
-        {/* Card Form */}
+        {/* Payment Form */}
         <form onSubmit={handlePay} style={{ padding: '24px 24px 20px', display: 'flex', flexDirection: 'column', gap: 20 }}>
           
-          <div style={{
-            background: 'rgba(245, 158, 11, 0.08)',
-            border: '1px dashed rgba(245, 158, 11, 0.3)',
-            borderRadius: 12,
-            padding: 12,
-            fontSize: 12,
-            color: '#F59E0B',
-            lineHeight: '18px',
-          }}>
-            This checkout simulates the Nomba gateway tokenization redirect. Payment is mocked, and the card will be validated securely.
-          </div>
+          {method === 'direct_debit' ? (
+            <>
+              <div style={{
+                background: 'rgba(245, 158, 11, 0.08)',
+                border: '1px dashed rgba(245, 158, 11, 0.3)',
+                borderRadius: 12,
+                padding: 12,
+                fontSize: 12,
+                color: '#F59E0B',
+                lineHeight: '18px',
+              }}>
+                This checkout simulates the Nomba direct debit mandate authorization. Your bank account will be linked securely.
+              </div>
 
-          {/* Card Number Input */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <label style={{ fontSize: 11, fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              Card Number
-            </label>
-            <div style={{ position: 'relative' }}>
-              <input
-                type="text"
-                disabled
-                value={cardNumber}
-                style={{
-                  width: '100%',
-                  padding: '12px 14px 12px 40px',
-                  borderRadius: 10,
-                  background: '#0F172A',
-                  border: '1px solid #1E293B',
-                  color: '#9CA3AF',
-                  fontSize: 14,
-                  letterSpacing: '1px',
-                }}
-              />
-              <CreditCard size={16} style={{ position: 'absolute', left: 14, top: 14, color: '#4B5563' }} />
-            </div>
-          </div>
+              {/* Bank Selection */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label style={{ fontSize: 11, fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  Select Bank
+                </label>
+                <div style={{ position: 'relative' }}>
+                  <select
+                    style={{
+                      width: '100%',
+                      padding: '12px 14px 12px 40px',
+                      borderRadius: 10,
+                      background: '#0F172A',
+                      border: '1px solid #334155',
+                      color: '#F3F4F6',
+                      fontSize: 14,
+                      outline: 'none',
+                      appearance: 'none',
+                    }}
+                    defaultValue="GTBank"
+                  >
+                    <option value="GTBank">Guaranty Trust Bank</option>
+                    <option value="Zenith">Zenith Bank</option>
+                    <option value="Access">Access Bank</option>
+                    <option value="UBA">United Bank for Africa</option>
+                  </select>
+                  <Landmark size={16} style={{ position: 'absolute', left: 14, top: 14, color: '#4B5563' }} />
+                </div>
+              </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-            {/* Expiry */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <label style={{ fontSize: 11, fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                Expiry Date
-              </label>
-              <input
-                type="text"
-                disabled
-                value={cardExpiry}
-                style={{
-                  width: '100%',
-                  padding: '12px 14px',
-                  borderRadius: 10,
-                  background: '#0F172A',
-                  border: '1px solid #1E293B',
-                  color: '#9CA3AF',
-                  fontSize: 14,
-                  textAlign: 'center',
-                }}
-              />
-            </div>
+              {/* Account Number */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label style={{ fontSize: 11, fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  Account Number
+                </label>
+                <input
+                  type="text"
+                  disabled
+                  value="0123456789"
+                  style={{
+                    width: '100%',
+                    padding: '12px 14px',
+                    borderRadius: 10,
+                    background: '#0F172A',
+                    border: '1px solid #1E293B',
+                    color: '#9CA3AF',
+                    fontSize: 14,
+                    letterSpacing: '1px',
+                  }}
+                />
+              </div>
 
-            {/* CVV */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <label style={{ fontSize: 11, fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                CVV
-              </label>
-              <input
-                type="password"
-                disabled
-                value={cardCvv}
-                style={{
-                  width: '100%',
-                  padding: '12px 14px',
-                  borderRadius: 10,
-                  background: '#0F172A',
-                  border: '1px solid #1E293B',
-                  color: '#9CA3AF',
-                  fontSize: 14,
-                  textAlign: 'center',
-                  letterSpacing: '2px',
-                }}
-              />
-            </div>
-          </div>
+              {/* Account Name */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label style={{ fontSize: 11, fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  Account Holder Name
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={cardName}
+                  onChange={(e) => setCardName(e.target.value.toUpperCase())}
+                  style={{
+                    width: '100%',
+                    padding: '12px 14px',
+                    borderRadius: 10,
+                    background: '#0F172A',
+                    border: '1px solid #334155',
+                    color: '#F3F4F6',
+                    fontSize: 14,
+                    outline: 'none',
+                  }}
+                  placeholder="e.g. JOHN DOE"
+                />
+              </div>
+            </>
+          ) : (
+            <>
+              <div style={{
+                background: 'rgba(245, 158, 11, 0.08)',
+                border: '1px dashed rgba(245, 158, 11, 0.3)',
+                borderRadius: 12,
+                padding: 12,
+                fontSize: 12,
+                color: '#F59E0B',
+                lineHeight: '18px',
+              }}>
+                This checkout simulates the Nomba gateway tokenization redirect. Payment is mocked, and the card will be validated securely.
+              </div>
 
-          {/* Cardholder Name */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <label style={{ fontSize: 11, fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              Cardholder Name
-            </label>
-            <input
-              type="text"
-              required
-              id="mock-card-name-input"
-              value={cardName}
-              onChange={(e) => setCardName(e.target.value.toUpperCase())}
-              style={{
-                width: '100%',
-                padding: '12px 14px',
-                borderRadius: 10,
-                background: '#0F172A',
-                border: '1px solid #334155',
-                color: '#F3F4F6',
-                fontSize: 14,
-                outline: 'none',
-                transition: 'border-color 150ms ease',
-              }}
-              placeholder="e.g. JOHN DOE"
-            />
-          </div>
+              {/* Card Number Input */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label style={{ fontSize: 11, fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  Card Number
+                </label>
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type="text"
+                    disabled
+                    value={cardNumber}
+                    style={{
+                      width: '100%',
+                      padding: '12px 14px 12px 40px',
+                      borderRadius: 10,
+                      background: '#0F172A',
+                      border: '1px solid #1E293B',
+                      color: '#9CA3AF',
+                      fontSize: 14,
+                      letterSpacing: '1px',
+                    }}
+                  />
+                  <CreditCard size={16} style={{ position: 'absolute', left: 14, top: 14, color: '#4B5563' }} />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                {/* Expiry */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <label style={{ fontSize: 11, fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    Expiry Date
+                  </label>
+                  <input
+                    type="text"
+                    disabled
+                    value={cardExpiry}
+                    style={{
+                      width: '100%',
+                      padding: '12px 14px',
+                      borderRadius: 10,
+                      background: '#0F172A',
+                      border: '1px solid #1E293B',
+                      color: '#9CA3AF',
+                      fontSize: 14,
+                      textAlign: 'center',
+                    }}
+                  />
+                </div>
+
+                {/* CVV */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <label style={{ fontSize: 11, fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    CVV
+                  </label>
+                  <input
+                    type="password"
+                    disabled
+                    value={cardCvv}
+                    style={{
+                      width: '100%',
+                      padding: '12px 14px',
+                      borderRadius: 10,
+                      background: '#0F172A',
+                      border: '1px solid #1E293B',
+                      color: '#9CA3AF',
+                      fontSize: 14,
+                      textAlign: 'center',
+                      letterSpacing: '2px',
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Cardholder Name */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label style={{ fontSize: 11, fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  Cardholder Name
+                </label>
+                <input
+                  type="text"
+                  required
+                  id="mock-card-name-input"
+                  value={cardName}
+                  onChange={(e) => setCardName(e.target.value.toUpperCase())}
+                  style={{
+                    width: '100%',
+                    padding: '12px 14px',
+                    borderRadius: 10,
+                    background: '#0F172A',
+                    border: '1px solid #334155',
+                    color: '#F3F4F6',
+                    fontSize: 14,
+                    outline: 'none',
+                    transition: 'border-color 150ms ease',
+                  }}
+                  placeholder="e.g. JOHN DOE"
+                />
+              </div>
+            </>
+          )}
 
           {/* Secure lock note */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontSize: 11, color: '#9CA3AF' }}>
@@ -275,11 +373,11 @@ export default function PaymentMockCheckoutPage() {
               {isSubmitting ? (
                 <>
                   <span className="spinner spinner-sm" style={{ borderColor: '#FFF #FFF transparent transparent' }} />
-                  Processing payment...
+                  {method === 'direct_debit' ? 'Linking account...' : 'Processing payment...'}
                 </>
               ) : (
                 <>
-                  Pay ₦100.00
+                  {method === 'direct_debit' ? 'Authorize Mandate' : 'Pay ₦100.00'}
                   <ChevronRight size={16} />
                 </>
               )}
@@ -302,7 +400,7 @@ export default function PaymentMockCheckoutPage() {
                 transition: 'all 150ms ease',
               }}
             >
-              Cancel Payment
+              Cancel Setup
             </button>
           </div>
         </form>

@@ -36,8 +36,8 @@ portalClient.interceptors.response.use(
 export const portalLogin = async (
   email: string,
   password: string,
-  merchantId: string,
-): Promise<{ portalToken: string; subscriber: PortalSubscriber }> => {
+  merchantId?: string,
+): Promise<any> => {
   const { data } = await portalClient.post('/portal/auth/login', { email, password, merchantId });
   return data;
 };
@@ -98,6 +98,12 @@ export const portalPauseSubscription = async (): Promise<{ message: string }> =>
 
 export const portalCancelSubscription = async (): Promise<{ message: string }> => {
   const { data } = await portalClient.post('/portal/subscription/cancel');
+  return data;
+};
+
+// ── Transaction Retry Payment ──────────────────────────────────────────────
+export const portalPayTransaction = async (transactionId: string): Promise<{ success: boolean; message: string }> => {
+  const { data } = await portalClient.post(`/portal/payments/${transactionId}/pay`);
   return data;
 };
 

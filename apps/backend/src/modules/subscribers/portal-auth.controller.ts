@@ -8,7 +8,7 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { IsString, IsEmail } from 'class-validator';
+import { IsString, IsEmail, IsOptional } from 'class-validator';
 import { PortalAuthService } from './portal-auth.service';
 import { PortalGuard } from './guards/portal.guard';
 import { Public } from '../../common/decorators/security.decorators';
@@ -20,8 +20,9 @@ class PortalLoginDto {
   @IsString()
   password: string;
 
+  @IsOptional()
   @IsString()
-  merchantId: string; // Merchant scoping — portal URL contains merchant ID
+  merchantId?: string; // Merchant scoping — optional now
 }
 
 class SetPortalPasswordDto {

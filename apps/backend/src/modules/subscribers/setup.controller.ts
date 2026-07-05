@@ -164,8 +164,8 @@ export class SetupController {
       const accountId = this.config.get<string>('nomba.accountId');
 
       if (!clientId || !clientSecret || !accountId) {
-        throw new Error(
-          'Nomba credentials not configured. Using fallback checkout.',
+        throw new BadRequestException(
+          'Nomba API credentials are not configured on the server.',
         );
       }
 
@@ -173,6 +173,7 @@ export class SetupController {
         subscriber.email,
         orderReference,
         callbackUrl,
+        dto.method as any,
       );
 
       return {
@@ -181,14 +182,10 @@ export class SetupController {
         isMock: false,
       };
     } catch (error: any) {
-      // Build mock checkout URL: client-side mock page
-      const mockCheckoutUrl = `${clientUrl}/onboarding/payment/mock-checkout?orderReference=${orderReference}&callbackUrl=${encodeURIComponent(callbackUrl)}&method=${dto.method}`;
-
-      return {
-        checkoutLink: mockCheckoutUrl,
-        orderReference,
-        isMock: true,
-      };
+      const msg = error.response?.data?.message || error.message;
+      throw new BadRequestException(
+        `Failed to initiate Nomba checkout: ${msg}`,
+      );
     }
   }
 
@@ -239,9 +236,14 @@ export class SetupController {
         !clientSecret ||
         !accountId;
 
+      let cardLastFour = '4242';
+      let cardExpiry = '12/28';
+
       if (isMockRef) {
         isSuccess = true;
         tokenKey = `tok_mock_card_${Math.random().toString(36).substring(2, 10)}`;
+        cardLastFour = '9012';
+        cardExpiry = '12/28';
       } else {
         try {
           const result = await this.nombaService.verifyOrder(dto.orderReference);
@@ -252,6 +254,8 @@ export class SetupController {
           ) {
             isSuccess = true;
             tokenKey = result.tokenKey;
+            cardLastFour = result.cardLastFour || '4242';
+            cardExpiry = result.cardExpiry || '12/28';
           } else {
             throw new BadRequestException(
               `Checkout transaction status is ${result.status}`,
@@ -265,8 +269,8 @@ export class SetupController {
       if (isSuccess && tokenKey) {
         if (dto.paymentMethod === 'card') {
           subscriber.cardToken = tokenKey;
-          subscriber.cardLastFour = '4242';
-          subscriber.cardExpiry = '12/28';
+          subscriber.cardLastFour = cardLastFour;
+          subscriber.cardExpiry = cardExpiry;
         } else if (dto.paymentMethod === 'direct_debit') {
           subscriber.mandateId = `mandate_mock_${Math.random().toString(36).substring(2, 10)}`;
         }
@@ -289,20 +293,35 @@ export class SetupController {
     const savedSubscriber = await this.subscriberRepo.save(subscriber);
 
     // If they checked out via a plan link, automatically create their subscription record now!
-    const metadata = savedSubscriber.metadata || {};
-    if (metadata.planId) {
+    let metadata = savedSubscriber.metadata || {};
+    if (typeof metadata === 'string') {
+      try {
+        metadata = JSON.parse(metadata);
+      } catch (err) {
+        metadata = {};
+      }
+    }
+
+    console.log(`[SetupController] Checking auto-subscribe for sub: ${savedSubscriber.id}, metadata:`, metadata);
+
+    const planId = (metadata as any).planId;
+    if (planId) {
+      console.log(`[SetupController] Auto-subscribing sub ${savedSubscriber.id} to plan ${planId}`);
       try {
         await this.subscribersService.subscribeCustomer(
           savedSubscriber.merchantId,
           savedSubscriber.id,
-          { planId: metadata.planId as string },
+          { planId: planId as string },
         );
+        console.log(`[SetupController] Auto-subscription successful for sub ${savedSubscriber.id}`);
       } catch (err) {
         console.error(
-          `Failed to automatically subscribe customer ${savedSubscriber.id} to plan ${metadata.planId} on setup completion:`,
+          `Failed to automatically subscribe customer ${savedSubscriber.id} to plan ${planId} on setup completion:`,
           (err as Error).message,
         );
       }
+    } else {
+      console.log(`[SetupController] No planId found in metadata for sub ${savedSubscriber.id}`);
     }
 
     // Issue portal token so subscriber is auto-logged in
@@ -316,6 +335,7 @@ export class SetupController {
       success: true,
       portalToken: loginResult.portalToken,
       merchantId: subscriber.merchantId,
+      subscriber: loginResult.subscriber,
       message: 'Setup complete! Welcome to your billing portal.',
     };
   }

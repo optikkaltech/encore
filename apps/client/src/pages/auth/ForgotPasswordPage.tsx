@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import client, { getErrorMessage } from '../../api/client';
 import { AUTH, ROUTES, API_ENDPOINTS } from '../../constants/app.constants';
 import type { ApiResponse } from '../../types/api.types';
+import { MailIcon } from '../../assets';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -28,8 +29,8 @@ export default function ForgotPasswordPage() {
   if (sent) {
     return (
       <AuthLayout>
-        <div className="card" style={{ padding: 'var(--space-xl)', textAlign: 'center' }}>
-          <div style={{ fontSize: 40, marginBottom: 16 }}>📧</div>
+        <div className="card" style={{ padding: 'var(--space-xl)', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <MailIcon size={40} style={{ color: 'var(--accent-primary)', marginBottom: 16 }} />
           <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>{AUTH.FORGOT_PASSWORD.SUCCESS}</h2>
           <Link to={ROUTES.LOGIN} style={{ fontSize: 14, color: 'var(--accent-primary)', fontWeight: 500 }}>
             {AUTH.FORGOT_PASSWORD.BACK_TO_LOGIN}

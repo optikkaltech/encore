@@ -2,12 +2,13 @@
 // Encore Dashboard - Main Application with Routing
 // ====================================================================
 
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useSearchParams } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { useEffect } from 'react';
 import { useAuthStore } from './store/auth.store';
 import { ROUTES } from './constants/app.constants';
 import { setCookie, COOKIE_KEYS } from './lib/cookies';
+import { CheckCircleIcon, MailIcon } from './assets';
 
 // Layouts
 import DashboardLayout from './components/layout/DashboardLayout';
@@ -27,6 +28,8 @@ import SubscribersPage from './pages/dashboard/SubscribersPage';
 import DunningPage from './pages/dashboard/DunningPage';
 import TransactionsPage from './pages/dashboard/TransactionsPage';
 import InvoicesPage from './pages/dashboard/InvoicesPage';
+import PayoutsPage from './pages/dashboard/PayoutsPage';
+import SettingsPage from './pages/dashboard/SettingsPage';
 
 // Portal Pages
 import PortalLoginPage from './pages/portal/PortalLoginPage';
@@ -65,22 +68,22 @@ function PlaceholderPage({ title }: { title: string }) {
 }
 
 function EmailVerificationPage() {
-  const params = new URLSearchParams(window.location.search);
-  const token = params.get('token');
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get('token');
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-secondary)' }}>
-      <div className="card" style={{ textAlign: 'center', padding: 'var(--space-2xl)' }}>
+      <div className="card" style={{ textAlign: 'center', padding: 'var(--space-2xl)', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         {token ? (
           <>
-            <div style={{ fontSize: 48, marginBottom: 16 }}>✅</div>
+            <CheckCircleIcon size={48} style={{ color: 'var(--success)', marginBottom: 16 }} />
             <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>Email Verified Successfully!</h2>
             <p style={{ color: 'var(--text-secondary)', marginBottom: 16 }}>You can now sign in to your account.</p>
             <a href={ROUTES.LOGIN} className="btn btn-primary">Sign In</a>
           </>
         ) : (
           <>
-            <div style={{ fontSize: 48, marginBottom: 16 }}>📧</div>
+            <MailIcon size={48} style={{ color: 'var(--accent-primary)', marginBottom: 16 }} />
             <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>Verify Your Email</h2>
             <p style={{ color: 'var(--text-secondary)' }}>Please check your email for the verification link.</p>
           </>
@@ -178,8 +181,8 @@ export default function App() {
             <Route path="transactions" element={<TransactionsPage />} />
             <Route path="dunning" element={<DunningPage />} />
             <Route path="invoices" element={<InvoicesPage />} />
-            <Route path="payouts" element={<PlaceholderPage title="Payouts" />} />
-            <Route path="settings" element={<PlaceholderPage title="Settings" />} />
+            <Route path="payouts" element={<PayoutsPage />} />
+            <Route path="settings" element={<SettingsPage />} />
           </Route>
 
           {/* Onboarding */}

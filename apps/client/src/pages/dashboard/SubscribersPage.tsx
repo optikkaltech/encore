@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Search, UserPlus, Calendar, CreditCard, Pencil, Trash2, Users, UploadCloud, CheckSquare, Send } from 'lucide-react';
+import { LandmarkIcon } from '../../assets';
 import { useSubscribers } from '../../hooks/useSubscribers';
 import AddSubscriberModal from '../../components/dashboard/AddSubscriberModal';
 import SubscribeModal from '../../components/dashboard/SubscribeModal';
@@ -191,8 +192,9 @@ export default function SubscribersPage() {
                       <div>{sub.email}</div>
                       <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>{sub.phone}</div>
                       {sub.virtualAccountNumber ? (
-                        <div style={{ fontSize: 11, color: 'var(--info)', marginTop: 4, fontWeight: 500 }}>
-                          🏦 {sub.virtualAccountNumber} ({sub.virtualAccountBank || 'Nomba Bank'})
+                        <div style={{ fontSize: 11, color: 'var(--info)', marginTop: 4, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 4 }}>
+                          <LandmarkIcon size={12} />
+                          <span>{sub.virtualAccountNumber} ({sub.virtualAccountBank || 'Nomba Bank'})</span>
                         </div>
                       ) : (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 4 }}>

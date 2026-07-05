@@ -81,7 +81,7 @@ export default function PortalPlanPage() {
       )}
 
       {/* Actions */}
-      {plan && plan.status === 'active' && (
+      {plan && ['active', 'trial', 'past_due'].includes(plan.status) && (
         <div className="card" style={{ padding: 24 }}>
           <h3 style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 16 }}>Manage Subscription</h3>
 

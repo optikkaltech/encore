@@ -8,6 +8,7 @@ import {
   portalUpdatePaymentMethod,
   portalPauseSubscription,
   portalCancelSubscription,
+  portalPayTransaction,
 } from '../api/portal.api';
 import type { PortalProfile, PortalInvoice, PortalPayment, UpdatePaymentMethodPayload } from '../types/portal.types';
 
@@ -66,14 +67,35 @@ export function usePortalInvoices() {
 export function usePortalPayments() {
   const [payments, setPayments] = useState<PortalPayment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [payingId, setPayingId] = useState<string | null>(null);
 
-  useEffect(() => {
-    portalGetPayments()
-      .then(setPayments)
-      .finally(() => setLoading(false));
+  const fetch = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await portalGetPayments();
+      setPayments(data);
+    } catch {
+      // ignore
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  return { payments, loading };
+  useEffect(() => {
+    fetch();
+  }, [fetch]);
+
+  const payPending = async (transactionId: string) => {
+    setPayingId(transactionId);
+    try {
+      await portalPayTransaction(transactionId);
+      await fetch();
+    } finally {
+      setPayingId(null);
+    }
+  };
+
+  return { payments, loading, payingId, payPending, refetch: fetch };
 }
 
 // ── Payment method hook ────────────────────────────────────────────────────

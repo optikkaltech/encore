@@ -39,3 +39,16 @@ export enum DunningStatus {
   FAILED = 'failed',
   CANCELLED = 'cancelled',
 }
+
+export enum PayoutStatus {
+  PENDING = 'pending',
+  PROCESSING = 'processing',
+  COMPLETED = 'completed',
+  FAILED = 'failed',
+  CANCELLED = 'cancelled',
+}
+
+export enum LedgerEntryType {
+  CREDIT = 'credit',   // money in (subscriber payment)
+  DEBIT = 'debit',     // money out (payout) or fee
+}

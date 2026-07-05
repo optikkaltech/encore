@@ -26,6 +26,7 @@ import {
 import { NombaService } from '../../core/nomba/nomba.service';
 import { BillingService } from '../billing/billing.service';
 import { EmailService } from '../../core/email/email.service';
+import { hashEmail } from '../../common/utils/security.utils';
 
 @Injectable()
 export class SubscribersService {
@@ -49,7 +50,7 @@ export class SubscribersService {
     dto: CreateSubscriberDto,
   ): Promise<Subscriber> {
     const existing = await this.subscriberRepo.findOne({
-      where: { merchantId, email: dto.email },
+      where: { merchantId, emailHash: hashEmail(dto.email.toLowerCase().trim()) },
     });
     if (existing) {
       throw new ConflictException(
@@ -468,8 +469,7 @@ export class SubscribersService {
       }
     }
 
-    subscriber.deletedAt = new Date();
-    await this.subscriberRepo.save(subscriber);
+    await this.subscriberRepo.remove(subscriber);
   }
 
   async bulkCreate(
@@ -481,7 +481,7 @@ export class SubscribersService {
 
     for (const dto of dtoList) {
       const existing = await this.subscriberRepo.findOne({
-        where: { merchantId, email: dto.email },
+        where: { merchantId, emailHash: hashEmail(dto.email.toLowerCase().trim()) },
       });
       if (existing) {
         errors.push(`Subscriber with email '${dto.email}' already registered.`);

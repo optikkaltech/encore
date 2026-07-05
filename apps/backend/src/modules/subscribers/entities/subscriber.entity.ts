@@ -8,6 +8,8 @@ import {
   JoinColumn,
   Index,
   OneToMany,
+  BeforeInsert,
+  BeforeUpdate,
 } from 'typeorm';
 import { SubscriptionStatus, PaymentMethod } from '../../../shared/enums';
 import { Merchant } from '../../merchants/entities';
@@ -16,6 +18,7 @@ import {
   EncryptionTransformer,
   JsonEncryptionTransformer,
 } from '../../../common/utils/encryption.transformer';
+import { hashEmail } from '../../../common/utils/security.utils';
 
 /**
  * Subscriber entity - customers of merchants.
@@ -27,6 +30,8 @@ import {
 @Entity('subscribers')
 @Index(['merchantId', 'email'], { unique: true })
 @Index(['merchantId', 'status'])
+@Index(['emailHash'])
+@Index(['merchantId', 'emailHash'], { unique: true })
 @Index(['virtualAccountNumber'], {
   unique: true,
   where: '"virtualAccountNumber" IS NOT NULL',
@@ -50,6 +55,14 @@ export class Subscriber {
     comment: 'NDPR: Encrypted PII',
   })
   email: string;
+
+  /**
+   * Keyed SHA-256 hash of the email — used for lookups since the email
+   * column is AES-GCM encrypted with a random IV (not directly searchable).
+   * NDPR safe: hash alone cannot reveal the original email without the key.
+   */
+  @Column({ type: 'varchar', length: 64, nullable: true })
+  emailHash: string;
 
   @Column({
     type: 'text',
@@ -188,4 +201,12 @@ export class Subscriber {
 
   @Column({ type: 'timestamp', nullable: true })
   deletedAt: Date; // Soft delete
+
+  @BeforeInsert()
+  @BeforeUpdate()
+  generateEmailHash() {
+    if (this.email) {
+      this.emailHash = hashEmail(this.email.toLowerCase().trim());
+    }
+  }
 }

@@ -20,7 +20,7 @@ export default function PortalLoginPage() {
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const { login, loadConfig, config, isAuthenticated } = usePortalStore();
+  const { login, loadConfig, config, isAuthenticated, multipleMerchantsList } = usePortalStore();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -34,10 +34,27 @@ export default function PortalLoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    if (!merchantId) return toast.error('No merchant specified in URL');
     setLoading(true);
     try {
-      await login(email, password, merchantId);
+      const result = await login(email, password, merchantId || undefined);
+      if (result && result.multipleMerchants) {
+        toast.success('Select a business to continue');
+      } else {
+        toast.success('Welcome back!');
+        navigate(ROUTES.PORTAL.DASHBOARD, { replace: true });
+      }
+    } catch (err: any) {
+      setError(err?.response?.data?.message || 'Invalid credentials');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSelectMerchant = async (selectedMerchantId: string) => {
+    setError('');
+    setLoading(true);
+    try {
+      await login(email, password, selectedMerchantId);
       toast.success('Welcome back!');
       navigate(ROUTES.PORTAL.DASHBOARD, { replace: true });
     } catch (err: any) {
@@ -96,9 +113,18 @@ export default function PortalLoginPage() {
           </p>
         </div>
 
-        {/* Form card */}
-        <div className="card" style={{ padding: 'var(--space-xl)' }}>
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
+        {multipleMerchantsList ? (
+          /* Merchant selection list */
+          <div className="card" style={{ padding: 'var(--space-xl)', display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ textAlign: 'center', marginBottom: 8 }}>
+              <h2 style={{ fontSize: 18, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 6 }}>
+                Select Business Portal
+              </h2>
+              <p style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
+                Your email is subscribed to multiple businesses. Choose one to continue:
+              </p>
+            </div>
+
             {error && (
               <div style={{
                 padding: '10px 12px',
@@ -111,70 +137,165 @@ export default function PortalLoginPage() {
               </div>
             )}
 
-            <div className="input-group">
-              <label className="input-label">Email address</label>
-              <input
-                id="portal-email"
-                type="email"
-                className="input"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                required
-                autoFocus
-              />
-            </div>
-
-            <div className="input-group">
-              <label className="input-label">Password</label>
-              <div style={{ position: 'relative' }}>
-                <input
-                  id="portal-password"
-                  type={showPass ? 'text' : 'password'}
-                  className="input"
-                  style={{ paddingRight: 40 }}
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  placeholder="Enter your password"
-                  required
-                />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {multipleMerchantsList.map(m => (
                 <button
-                  type="button"
-                  onClick={() => setShowPass(p => !p)}
+                  key={m.id}
+                  onClick={() => handleSelectMerchant(m.id)}
+                  disabled={loading}
                   style={{
-                    position: 'absolute',
-                    right: 10,
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer',
-                    color: 'var(--text-muted)',
                     display: 'flex',
                     alignItems: 'center',
-                    padding: 0,
+                    gap: 12,
+                    width: '100%',
+                    padding: '14px 16px',
+                    borderRadius: 12,
+                    border: '1px solid var(--border-light)',
+                    background: 'var(--bg-primary)',
+                    cursor: loading ? 'not-allowed' : 'pointer',
+                    textAlign: 'left',
+                    transition: 'all 200ms ease',
+                    boxShadow: 'var(--shadow-xs)',
+                  }}
+                  onMouseOver={e => {
+                    if (!loading) {
+                      e.currentTarget.style.borderColor = m.brandColor || '#7c3aed';
+                      e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
+                    }
+                  }}
+                  onMouseOut={e => {
+                    e.currentTarget.style.borderColor = 'var(--border-light)';
+                    e.currentTarget.style.boxShadow = 'var(--shadow-xs)';
                   }}
                 >
-                  {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
+                  {m.logoUrl ? (
+                    <img src={m.logoUrl} alt="" style={{ width: 36, height: 36, objectFit: 'contain' }} />
+                  ) : (
+                    <div style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: 8,
+                      background: m.brandColor || '#7c3aed',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#fff',
+                      fontWeight: 700,
+                      fontSize: 16
+                    }}>
+                      {m.businessName?.[0]?.toUpperCase() || 'B'}
+                    </div>
+                  )}
+                  <div style={{ flex: 1 }}>
+                    <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
+                      {m.businessName}
+                    </p>
+                    <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: 0 }}>
+                      Click to enter portal
+                    </p>
+                  </div>
                 </button>
-              </div>
+              ))}
             </div>
 
             <button
-              id="portal-login-btn"
-              type="submit"
-              className="btn btn-primary btn-full btn-lg"
+              onClick={() => usePortalStore.setState({ multipleMerchantsList: null })}
               disabled={loading}
-              style={{ background: brandColor, marginTop: 4 }}
+              style={{
+                alignSelf: 'center',
+                marginTop: 8,
+                background: 'none',
+                border: 'none',
+                color: 'var(--text-secondary)',
+                fontSize: 13,
+                cursor: 'pointer',
+                textDecoration: 'underline'
+              }}
             >
-              {loading ? (
-                <><span className="spinner spinner-sm" /> Signing in...</>
-              ) : (
-                <><LogIn size={16} /> Sign in</>
-              )}
+              ← Back to Login
             </button>
-          </form>
-        </div>
+          </div>
+        ) : (
+          /* Form card */
+          <div className="card" style={{ padding: 'var(--space-xl)' }}>
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
+              {error && (
+                <div style={{
+                  padding: '10px 12px',
+                  background: '#FEE2E2',
+                  color: '#991B1B',
+                  borderRadius: 8,
+                  fontSize: 13,
+                }}>
+                  {error}
+                </div>
+              )}
+
+              <div className="input-group">
+                <label className="input-label">Email address</label>
+                <input
+                  id="portal-email"
+                  type="email"
+                  className="input"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  required
+                  autoFocus
+                />
+              </div>
+
+              <div className="input-group">
+                <label className="input-label">Password</label>
+                <div style={{ position: 'relative' }}>
+                  <input
+                    id="portal-password"
+                    type={showPass ? 'text' : 'password'}
+                    className="input"
+                    style={{ paddingRight: 40 }}
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    placeholder="Enter your password"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPass(p => !p)}
+                    style={{
+                      position: 'absolute',
+                      right: 10,
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      color: 'var(--text-muted)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      padding: 0,
+                    }}
+                  >
+                    {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </div>
+
+              <button
+                id="portal-login-btn"
+                type="submit"
+                className="btn btn-primary btn-full btn-lg"
+                disabled={loading}
+                style={{ background: brandColor, marginTop: 4 }}
+              >
+                {loading ? (
+                  <><span className="spinner spinner-sm" /> Signing in...</>
+                ) : (
+                  <><LogIn size={16} /> Sign in</>
+                )}
+              </button>
+            </form>
+          </div>
+        )}
 
         {config?.poweredBy && (
           <p style={{ textAlign: 'center', fontSize: 11, color: 'var(--text-muted)', marginTop: 'var(--space-lg)' }}>

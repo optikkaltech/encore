@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import toast from 'react-hot-toast';
-import { usePortalPaymentMethod } from '../../hooks/usePortal';
-import { usePortalProfile } from '../../hooks/usePortal';
+import { usePortalPaymentMethod, usePortalProfile } from '../../hooks/usePortal';
 import { usePortalStore } from '../../store/portal.store';
+import { CreditCardIcon, LandmarkIcon } from '../../assets';
 
 /**
  * Portal Payment Method Page — subscribers can update their card or bank mandate.
@@ -45,6 +45,7 @@ export default function PortalPaymentMethodPage() {
     background: 'none', border: 'none',
     borderBottom: active ? `2px solid ${brandColor}` : '2px solid transparent',
     cursor: 'pointer', transition: 'all 0.15s',
+    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
   });
 
   return (
@@ -59,11 +60,15 @@ export default function PortalPaymentMethodPage() {
         <div className="card" style={{ padding: 16, marginBottom: 24 }}>
           <p style={{ fontSize: 12, color: 'var(--text-tertiary)', fontWeight: 500, marginBottom: 8, textTransform: 'uppercase' }}>Current Method</p>
           {profile.cardLastFour ? (
-            <p style={{ fontSize: 14, color: 'var(--text-primary)' }}>
-              💳 Card ending in <strong>{profile.cardLastFour}</strong> (expires {profile.cardExpiry})
+            <p style={{ fontSize: 14, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <CreditCardIcon size={16} />
+              <span>Card ending in <strong>{profile.cardLastFour}</strong> (expires {profile.cardExpiry})</span>
             </p>
           ) : (
-            <p style={{ fontSize: 14, color: 'var(--text-primary)' }}>🏦 Direct Debit — {profile.bankName}</p>
+            <p style={{ fontSize: 14, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <LandmarkIcon size={16} />
+              <span>Direct Debit — {profile.bankName}</span>
+            </p>
           )}
         </div>
       )}
@@ -71,8 +76,14 @@ export default function PortalPaymentMethodPage() {
       <div className="card" style={{ padding: 24 }}>
         {/* Tabs */}
         <div style={{ display: 'flex', borderBottom: '1px solid var(--border-primary)', marginBottom: 24 }}>
-          <button style={tabStyle(tab === 'card')} onClick={() => setTab('card')}>💳 Card Payment</button>
-          <button style={tabStyle(tab === 'bank')} onClick={() => setTab('bank')}>🏦 Direct Debit</button>
+          <button style={tabStyle(tab === 'card')} onClick={() => setTab('card')}>
+            <CreditCardIcon size={16} />
+            <span>Card Payment</span>
+          </button>
+          <button style={tabStyle(tab === 'bank')} onClick={() => setTab('bank')}>
+            <LandmarkIcon size={16} />
+            <span>Direct Debit</span>
+          </button>
         </div>
 
         <form onSubmit={handleSubmit}>

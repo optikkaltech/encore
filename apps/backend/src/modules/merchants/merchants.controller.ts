@@ -19,6 +19,7 @@ import {
   InitiateCheckoutDto,
   VerifyCheckoutDto,
 } from './dto/onboarding.dto';
+import { UpdateSettingsDto, UpdateBrandingDto, UpdateProfileDto } from './dto/settings.dto';
 import { Public, Secure } from '../../common/decorators/security.decorators';
 import { Audit } from '../../core/audit';
 import { TenantGuard } from '../../core/tenancy';
@@ -300,6 +301,15 @@ export class MerchantsController {
         currentSubscriberCount: merchant.currentSubscriberCount,
         transactionFeeRate: merchant.transactionFeeRate,
         trialEndsAt: merchant.trialEndsAt,
+        phone: merchant.phone,
+        registrationNumber: merchant.registrationNumber,
+        taxId: merchant.taxId,
+        address: merchant.address,
+        city: merchant.city,
+        state: merchant.state,
+        country: merchant.country,
+        settings: merchant.settings,
+
         daysRemaining: this.merchantsService.getDaysRemaining(merchant),
         isExpired: this.merchantsService.isAccountExpired(merchant),
         nextBillingDate: merchant.nextPlatformFeeDueAt,
@@ -396,4 +406,82 @@ export class MerchantsController {
       },
     };
   }
+
+  /**
+   * GET /api/v1/merchants/me/settings
+   * Get current merchant settings.
+   */
+  @Get('me/settings')
+  @UseGuards(TenantGuard)
+  @Secure()
+  async getSettings(@CurrentMerchant() merchantId: string) {
+    const settings = await this.merchantsService.getSettings(merchantId);
+    return { success: true, data: settings };
+  }
+
+  /**
+   * PATCH /api/v1/merchants/me/settings
+   * Update webhook, notifications, billing settings.
+   */
+  @Patch('me/settings')
+  @UseGuards(TenantGuard)
+  @Secure()
+  @Audit({ action: 'MERCHANT_SETTINGS_UPDATE', entityType: 'merchant' })
+  async updateSettings(
+    @CurrentMerchant() merchantId: string,
+    @Body() dto: UpdateSettingsDto,
+  ) {
+    const merchant = await this.merchantsService.updateSettings(merchantId, dto);
+    return {
+      success: true,
+      data: { id: merchant.id, settings: merchant.settings, webhookUrl: merchant.webhookUrl },
+      message: 'Settings updated successfully.',
+    };
+  }
+
+  /**
+   * PATCH /api/v1/merchants/me/branding
+   * Update logo, brand color, custom domain.
+   */
+  @Patch('me/branding')
+  @UseGuards(TenantGuard)
+  @Secure()
+  @Audit({ action: 'MERCHANT_BRANDING_UPDATE', entityType: 'merchant' })
+  async updateBranding(
+    @CurrentMerchant() merchantId: string,
+    @Body() dto: UpdateBrandingDto,
+  ) {
+    const merchant = await this.merchantsService.updateBranding(merchantId, dto);
+    return {
+      success: true,
+      data: {
+        id: merchant.id,
+        brandLogoUrl: merchant.brandLogoUrl,
+        brandPrimaryColor: merchant.brandPrimaryColor,
+        customDomain: merchant.customDomain,
+      },
+      message: 'Branding updated successfully.',
+    };
+  }
+
+  /**
+   * PATCH /api/v1/merchants/me/profile
+   * Update business profile and KYC details.
+   */
+  @Patch('me/profile')
+  @UseGuards(TenantGuard)
+  @Secure()
+  @Audit({ action: 'MERCHANT_PROFILE_UPDATE', entityType: 'merchant' })
+  async updateProfile(
+    @CurrentMerchant() merchantId: string,
+    @Body() dto: UpdateProfileDto,
+  ) {
+    const merchant = await this.merchantsService.updateProfile(merchantId, dto);
+    return {
+      success: true,
+      data: merchant,
+      message: 'Profile and KYC details updated successfully.',
+    };
+  }
 }
+

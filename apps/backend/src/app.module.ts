@@ -43,6 +43,7 @@ import { UploadsModule } from './modules/uploads/uploads.module';
 import { SystemConfigModule } from './modules/system-config/system-config.module';
 import { NombaModule } from './core/nomba/nomba.module';
 import { AiCommandModule } from './modules/ai-command/ai-command.module';
+import { PayoutsModule } from './modules/payouts/payouts.module';
 
 @Module({
   imports: [
@@ -97,6 +98,7 @@ import { AiCommandModule } from './modules/ai-command/ai-command.module';
     PlansModule,
     BillingModule,
     DunningModule,
+    PayoutsModule,
     // NombaModule,
   ],
 

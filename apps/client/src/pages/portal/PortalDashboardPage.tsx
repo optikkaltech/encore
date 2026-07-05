@@ -51,7 +51,7 @@ export default function PortalDashboardPage() {
       {/* Greeting */}
       <div style={{ marginBottom: 28 }}>
         <h1 style={{ fontSize: 24, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 4 }}>
-          Welcome back, {subscriber?.firstName} 👋
+          Welcome back, {subscriber?.firstName}
         </h1>
         <p style={{ fontSize: 14, color: 'var(--text-secondary)' }}>
           Here's a summary of your subscription

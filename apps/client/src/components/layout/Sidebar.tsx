@@ -35,7 +35,6 @@ export default function Sidebar({ isCollapsed, onToggle, mobileOpen, onMobileClo
   const navigate = useNavigate();
   const location = useLocation();
   const { merchant, logout } = useAuthStore();
-  const [mySpaceOpen, setMySpaceOpen] = useState(true);
   const [collectionsOpen, setCollectionsOpen] = useState(true);
 
   const isActive = (path: string) => location.pathname === path;
@@ -146,38 +145,7 @@ export default function Sidebar({ isCollapsed, onToggle, mobileOpen, onMobileClo
           })}
         </div>
 
-        {/* My Space Section */}
-        {!isCollapsed && (
-          <div style={{ marginTop: 'var(--space-lg)' }}>
-            <button
-              onClick={() => setMySpaceOpen(!mySpaceOpen)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-                padding: '6px 12px',
-                width: '100%',
-                border: 'none',
-                background: 'transparent',
-                cursor: 'pointer',
-                fontSize: 12,
-                fontWeight: 500,
-                color: 'var(--text-muted)',
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px',
-              }}
-            >
-              {mySpaceOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-              <span>{DASHBOARD.SIDEBAR.MY_SPACE}</span>
-            </button>
-            {mySpaceOpen && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 2, marginTop: 4 }}>
-                <NavItem icon={FileText} label={DASHBOARD.SIDEBAR.FILES} isCollapsed={isCollapsed} />
-                <NavItem icon={Users} label={DASHBOARD.SIDEBAR.SHARED} isCollapsed={isCollapsed} />
-              </div>
-            )}
-          </div>
-        )}
+
 
         {/* Collections Section */}
         {!isCollapsed && (
