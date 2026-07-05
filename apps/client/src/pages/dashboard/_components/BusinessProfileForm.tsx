@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { User, Phone, MapPin, Building, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { BuildingIcon, ShieldCheckIcon, CheckCircle2Icon } from '../../../assets';
 import type { MerchantProfile } from '../../../api/settings.api';
 
 interface Props {
@@ -55,7 +55,7 @@ export default function BusinessProfileForm({ profile, saving, onSave }: Props) 
     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-light)', paddingBottom: 12 }}>
         <h3 style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Building size={16} color="var(--primary-on-light)" />
+          <BuildingIcon size={16} color="var(--primary-on-light)" />
           Business Profile & KYC Information
         </h3>
         <span className={`badge ${getKycBadgeClass(profile?.kycStatus)}`} style={{ textTransform: 'capitalize' }}>
@@ -115,7 +115,7 @@ export default function BusinessProfileForm({ profile, saving, onSave }: Props) 
 
       {profile?.kycStatus !== 'verified' && (
         <div style={{ display: 'flex', gap: 8, padding: 12, background: 'rgba(99,102,241,0.06)', borderRadius: 8, border: '1px solid rgba(99,102,241,0.15)', alignItems: 'flex-start' }}>
-          <ShieldCheck size={16} color="var(--primary-on-light)" style={{ flexShrink: 0, marginTop: 2 }} />
+          <ShieldCheckIcon size={16} color="var(--primary-on-light)" style={{ flexShrink: 0, marginTop: 2 }} />
           <p style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
             <strong>Testing Note:</strong> Submitting a valid CAC, TIN, and Address will automatically verify your KYC status instantly in this Sandbox testing environment.
           </p>
@@ -124,7 +124,7 @@ export default function BusinessProfileForm({ profile, saving, onSave }: Props) 
 
       {profile?.kycStatus === 'verified' && (
         <div style={{ display: 'flex', gap: 8, padding: 12, background: 'rgba(34,197,94,0.06)', borderRadius: 8, border: '1px solid rgba(34,197,94,0.15)', alignItems: 'flex-start' }}>
-          <CheckCircle2 size={16} color="var(--success)" style={{ flexShrink: 0, marginTop: 2 }} />
+          <CheckCircle2Icon size={16} color="var(--success)" style={{ flexShrink: 0, marginTop: 2 }} />
           <p style={{ fontSize: 12, color: 'var(--success)', lineHeight: 1.5 }}>
             Your account is verified! You can collect unlimited live payments and request payouts.
           </p>

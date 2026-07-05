@@ -16,6 +16,11 @@ import {
   FileText,
   Sun,
   Moon,
+  Building,
+  ShieldCheck,
+  CheckCircle2,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 
 export {
@@ -36,4 +41,9 @@ export {
   FileText as FileTextIcon,
   Sun as SunIcon,
   Moon as MoonIcon,
+  Building as BuildingIcon,
+  ShieldCheck as ShieldCheckIcon,
+  CheckCircle2 as CheckCircle2Icon,
+  Eye as EyeIcon,
+  EyeOff as EyeOffIcon,
 };

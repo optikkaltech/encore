@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { LogIn, Eye, EyeOff } from 'lucide-react';
+import { EyeIcon, EyeOffIcon } from '../../assets';
 import { usePortalStore } from '../../store/portal.store';
 import { ROUTES } from '../../constants/app.constants';
 
@@ -281,7 +281,7 @@ export default function PortalLoginPage() {
                       padding: 0,
                     }}
                   >
-                    {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
+                    {showPass ? <EyeOffIcon size={16} /> : <EyeIcon size={16} />}
                   </button>
                 </div>
               </div>
