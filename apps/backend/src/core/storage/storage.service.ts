@@ -74,6 +74,10 @@ export class StorageService {
     folder: string,
     entityId: string,
   ): Promise<UploadResult> {
+    this.logger.log(
+      `uploadFile: name="${file.originalname}", mime="${file.mimetype}", size=${file.size}, hasBuffer=${!!file.buffer}, path="${file.path || 'N/A'}"`,
+    );
+
     // If buffer is missing but path is present (disk storage fallback)
     if (!file.buffer && file.path) {
       try {
