@@ -43,7 +43,16 @@ import PortalPlanPage from './pages/portal/PortalPlanPage';
 import PortalLayout from './components/layout/PortalLayout';
 import PortalGuard from './components/guards/PortalGuard';
 
+// Public Marketing Pages
+import PublicLayout from './components/layout/PublicLayout';
+import LandingPage from './pages/public/LandingPage';
+import PricingPage from './pages/public/PricingPage';
+import AboutPage from './pages/public/AboutPage';
+import { TermsPage, PrivacyPage, SecurityPage } from './pages/public/LegalPages';
+import ContactPage from './pages/public/ContactPage';
+
 // Onboarding Pages
+
 import WelcomePage from './pages/onboarding/WelcomePage';
 import KycPage from './pages/onboarding/KycPage';
 import PaymentSetupPage from './pages/onboarding/PaymentSetupPage';
@@ -209,11 +218,25 @@ export default function App() {
         </Route>
 
         {/* ================================================================ */}
+        {/* Public Marketing Site Routes (Bamboo Theme layout) */}
+        {/* ================================================================ */}
+        <Route element={<PublicLayout />}>
+          <Route path={ROUTES.HOME} element={<LandingPage />} />
+          <Route path={ROUTES.PRICING} element={<PricingPage />} />
+          <Route path={ROUTES.ABOUT} element={<AboutPage />} />
+          <Route path={ROUTES.TERMS} element={<TermsPage />} />
+          <Route path={ROUTES.PRIVACY} element={<PrivacyPage />} />
+          <Route path={ROUTES.SECURITY} element={<SecurityPage />} />
+          <Route path={ROUTES.CONTACT} element={<ContactPage />} />
+        </Route>
+
+        {/* ================================================================ */}
         {/* Public Enrollment & Onboarding Pages */}
         {/* ================================================================ */}
         <Route path={ROUTES.CHECKOUT} element={<CheckoutPage />} />
         <Route path={ROUTES.SETUP} element={<SetupPage />} />
         <Route path={ROUTES.ONBOARDING.PAYMENT_MOCK_CHECKOUT} element={<PaymentMockCheckoutPage />} />
+
 
         {/* ================================================================ */}
         {/* Fallback: Redirect to dashboard or login */}

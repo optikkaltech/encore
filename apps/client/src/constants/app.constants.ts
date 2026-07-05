@@ -28,6 +28,11 @@ export const ROUTES = {
   VERIFY_EMAIL: '/verify-email',
   OAUTH_CALLBACK: '/auth/callback',
   PRICING: '/pricing',
+  ABOUT: '/about',
+  TERMS: '/terms',
+  PRIVACY: '/privacy',
+  SECURITY: '/security',
+  CONTACT: '/contact',
   CHECKOUT: '/checkout/:planId',
   SETUP: '/setup',
 
