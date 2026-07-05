@@ -226,11 +226,63 @@ export class StorageService {
     }
 
     // Check MIME type
-    if (!this.config.limits.allowedMimeTypes.includes(file.mimetype)) {
+    let isAllowed = this.config.limits.allowedMimeTypes.includes(file.mimetype);
+
+    // Fallback: If MIME type is not allowed (e.g. sent as application/octet-stream),
+    // check file extension and verify against the file's magic bytes (header signature)
+    if (!isAllowed && file.buffer) {
+      const deducedMime = this.getMimeTypeFromExtension(file.originalname);
+      if (deducedMime && this.verifyMagicBytes(file.buffer, deducedMime)) {
+        isAllowed = true;
+      }
+    }
+
+    if (!isAllowed) {
+      this.logger.warn(
+        `File upload rejected. Original Name: "${file.originalname}", Received MIME: "${file.mimetype}", Size: ${file.size} bytes`,
+      );
       throw new BadRequestException(
         `Invalid file type. Allowed: ${this.config.limits.allowedMimeTypes.join(', ')}`,
       );
     }
+  }
+
+  private getMimeTypeFromExtension(filename: string): string | null {
+    const ext = path.extname(filename).toLowerCase();
+    switch (ext) {
+      case '.pdf':
+        return 'application/pdf';
+      case '.jpg':
+      case '.jpeg':
+        return 'image/jpeg';
+      case '.png':
+        return 'image/png';
+      default:
+        return null;
+    }
+  }
+
+  private verifyMagicBytes(buffer: Buffer, expectedMime: string): boolean {
+    if (buffer.length < 4) return false;
+
+    if (expectedMime === 'application/pdf') {
+      // PDF files must start with %PDF
+      return buffer.slice(0, 4).toString() === '%PDF';
+    }
+    if (expectedMime === 'image/jpeg') {
+      // JPEG files start with FF D8 FF
+      return buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff;
+    }
+    if (expectedMime === 'image/png') {
+      // PNG files start with 89 50 4E 47 (or \x89PNG)
+      return (
+        buffer[0] === 0x89 &&
+        buffer[1] === 0x50 &&
+        buffer[2] === 0x4e &&
+        buffer[3] === 0x47
+      );
+    }
+    return false;
   }
 
   /**

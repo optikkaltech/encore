@@ -61,6 +61,7 @@ export default registerAs(
         'image/png',
         'image/jpg',
         'application/pdf',
+        'application/x-pdf',
       ],
     },
   }),
