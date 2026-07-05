@@ -50,6 +50,11 @@ export class SanitizePipe implements PipeTransform {
   transform(value: unknown, metadata: ArgumentMetadata): unknown {
     if (!value) return value;
 
+    // Bypass sanitization for file upload objects
+    if (this.isFileUpload(value)) {
+      return value;
+    }
+
     // Check if it's an object (DTO)
     if (typeof value === 'object' && value !== null) {
       return this.sanitizeObject(value as Record<string, unknown>);
@@ -71,6 +76,16 @@ export class SanitizePipe implements PipeTransform {
     }
 
     return value;
+  }
+
+  private isFileUpload(value: any): boolean {
+    return (
+      value &&
+      typeof value === 'object' &&
+      'originalname' in value &&
+      'mimetype' in value &&
+      ('buffer' in value || 'path' in value)
+    );
   }
 
   private sanitizeObject(
