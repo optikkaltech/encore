@@ -97,6 +97,11 @@ export class UpdateProfileDto {
   @IsOptional()
   @IsString()
   @MaxLength(255)
+  ownerName?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
   businessName?: string;
 
   @IsOptional()

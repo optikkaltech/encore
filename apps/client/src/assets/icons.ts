@@ -14,6 +14,8 @@ import {
   LayoutDashboard,
   History,
   FileText,
+  Sun,
+  Moon,
 } from 'lucide-react';
 
 export {
@@ -32,4 +34,6 @@ export {
   LayoutDashboard as LayoutDashboardIcon,
   History as HistoryIcon,
   FileText as FileTextIcon,
+  Sun as SunIcon,
+  Moon as MoonIcon,
 };

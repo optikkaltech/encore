@@ -8,7 +8,7 @@ import { ROUTES } from '../../constants/app.constants';
 
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid var(--border-primary)' }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid var(--border-light)' }}>
       <span style={{ fontSize: 14, color: 'var(--text-secondary)' }}>{label}</span>
       <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>{value}</span>
     </div>
@@ -18,13 +18,13 @@ function InfoRow({ label, value }: { label: string; value: string }) {
 /**
  * Portal Plan Page — view plan details and manage subscription lifecycle.
  * Subscribers can pause or cancel from here.
+ * Uses standard system CSS variables for colors.
  */
 export default function PortalPlanPage() {
   const { profile, loading, refetch } = usePortalProfile();
   const { pause, cancel, loading: actLoading } = usePortalSubscription();
-  const { config, logout } = usePortalStore();
+  const { logout } = usePortalStore();
   const navigate = useNavigate();
-  const brandColor = config?.brandColor || '#7c3aed';
   const [confirmCancel, setConfirmCancel] = useState(false);
 
   const plan = profile?.activePlan;
@@ -55,18 +55,30 @@ export default function PortalPlanPage() {
 
   return (
     <div style={{ maxWidth: 600 }}>
+      {/* Scope styles for standard cards inside portal pages */}
+      <style>{`
+        .portal-card {
+          background: var(--bg-primary);
+          border: 1px solid var(--border-light);
+          border-radius: 12px;
+          padding: 24px;
+          box-shadow: var(--shadow-sm);
+          margin-bottom: 24px;
+        }
+      `}</style>
+
       <div style={{ marginBottom: 24 }}>
         <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 4 }}>My Plan</h1>
         <p style={{ fontSize: 14, color: 'var(--text-secondary)' }}>Details about your current subscription plan</p>
       </div>
 
       {plan ? (
-        <div className="card" style={{ padding: 24, marginBottom: 24 }}>
+        <div className="portal-card">
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
             <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-primary)' }}>{plan.planName}</h2>
             <span style={{
               padding: '4px 12px', borderRadius: 20, fontSize: 12, fontWeight: 700,
-              background: `${brandColor}20`, color: brandColor,
+              background: 'var(--accent-light)', color: 'var(--accent-primary)',
             }}>{plan.status.toUpperCase()}</span>
           </div>
           <InfoRow label="Billing Amount" value={formatCurrency(plan.amount, plan.currency)} />
@@ -75,22 +87,26 @@ export default function PortalPlanPage() {
           <InfoRow label="Next Billing Date" value={formatDate(profile?.nextBillingDate)} />
         </div>
       ) : (
-        <div className="card" style={{ padding: 32, textAlign: 'center', marginBottom: 24 }}>
+        <div className="portal-card" style={{ padding: 32, textAlign: 'center' }}>
           <p style={{ color: 'var(--text-secondary)' }}>No active subscription found</p>
         </div>
       )}
 
       {/* Actions */}
       {plan && ['active', 'trial', 'past_due'].includes(plan.status) && (
-        <div className="card" style={{ padding: 24 }}>
+        <div className="portal-card">
           <h3 style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 16 }}>Manage Subscription</h3>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <button onClick={handlePause} disabled={actLoading} style={{
-              padding: '12px 16px', borderRadius: 8, border: '1px solid var(--border-primary)',
+              padding: '12px 16px', borderRadius: 8, border: '1px solid var(--border-light)',
               background: 'var(--bg-secondary)', color: 'var(--text-primary)', fontSize: 14,
               fontWeight: 600, cursor: actLoading ? 'not-allowed' : 'pointer', textAlign: 'left',
-            }}>
+              transition: 'background 0.15s',
+            }}
+              onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-tertiary)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'var(--bg-secondary)'}
+            >
               ⏸ Pause Subscription
               <span style={{ display: 'block', fontSize: 12, color: 'var(--text-secondary)', fontWeight: 400, marginTop: 2 }}>
                 Temporarily pause billing. You can resume anytime.
@@ -119,8 +135,8 @@ export default function PortalPlanPage() {
                     border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer',
                   }}>{actLoading ? 'Cancelling...' : 'Yes, cancel'}</button>
                   <button onClick={() => setConfirmCancel(false)} style={{
-                    padding: '8px 16px', borderRadius: 6, background: 'var(--bg-secondary)',
-                    border: '1px solid var(--border-primary)', fontSize: 13, cursor: 'pointer', color: 'var(--text-primary)',
+                    padding: '8px 16px', borderRadius: 6, background: 'var(--bg-primary)',
+                    border: '1px solid var(--border-light)', fontSize: 13, cursor: 'pointer', color: 'var(--text-secondary)',
                   }}>Go back</button>
                 </div>
               </div>

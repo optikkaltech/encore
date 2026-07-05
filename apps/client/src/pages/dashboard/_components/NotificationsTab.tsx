@@ -34,7 +34,7 @@ export default function NotificationsTab({ settings, saving, onSave }: Props) {
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24 }}>
-        <Bell size={18} color="var(--primary)" />
+        <Bell size={18} color="var(--primary-on-light)" />
         <h2 style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-primary)' }}>Notifications & Billing Behaviour</h2>
       </div>
 

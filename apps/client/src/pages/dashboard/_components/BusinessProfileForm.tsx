@@ -9,6 +9,7 @@ interface Props {
 }
 
 export default function BusinessProfileForm({ profile, saving, onSave }: Props) {
+  const [ownerName, setOwnerName] = useState('');
   const [businessName, setBusinessName] = useState('');
   const [phone, setPhone] = useState('');
   const [regNumber, setRegNumber] = useState('');
@@ -19,6 +20,7 @@ export default function BusinessProfileForm({ profile, saving, onSave }: Props) 
 
   useEffect(() => {
     if (profile) {
+      setOwnerName(profile.settings?.ownerName || '');
       setBusinessName(profile.businessName || '');
       setPhone(profile.phone || '');
       setRegNumber(profile.registrationNumber || '');
@@ -32,6 +34,7 @@ export default function BusinessProfileForm({ profile, saving, onSave }: Props) 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSave({
+      ownerName,
       businessName,
       phone,
       registrationNumber: regNumber || undefined,
@@ -52,7 +55,7 @@ export default function BusinessProfileForm({ profile, saving, onSave }: Props) 
     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-light)', paddingBottom: 12 }}>
         <h3 style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Building size={16} color="var(--primary)" />
+          <Building size={16} color="var(--primary-on-light)" />
           Business Profile & KYC Information
         </h3>
         <span className={`badge ${getKycBadgeClass(profile?.kycStatus)}`} style={{ textTransform: 'capitalize' }}>
@@ -60,18 +63,30 @@ export default function BusinessProfileForm({ profile, saving, onSave }: Props) 
         </span>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+      <div className="profile-grid">
+        <div className="form-group">
+          <label className="label">Business Owner's Full Name *</label>
+          <input className="input" placeholder="e.g. Jane Doe" value={ownerName} onChange={e => setOwnerName(e.target.value)} required />
+        </div>
         <div className="form-group">
           <label className="label">Business Name *</label>
           <input className="input" value={businessName} onChange={e => setBusinessName(e.target.value)} required />
         </div>
+      </div>
+
+      <div className="profile-grid">
         <div className="form-group">
           <label className="label">Phone Number *</label>
           <input className="input" type="tel" value={phone} onChange={e => setPhone(e.target.value)} required />
         </div>
+        <div className="form-group">
+          <label className="label">Country</label>
+          <input className="input" value="Nigeria (NG)" disabled style={{ background: 'var(--bg-secondary)', cursor: 'not-allowed' }} />
+        </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+
+      <div className="profile-grid">
         <div className="form-group">
           <label className="label">CAC Registration Number (optional)</label>
           <input className="input" placeholder="RC-XXXXXX" value={regNumber} onChange={e => setRegNumber(e.target.value)} />
@@ -87,7 +102,7 @@ export default function BusinessProfileForm({ profile, saving, onSave }: Props) 
         <input className="input" placeholder="e.g. 12 Marina Street" value={address} onChange={e => setAddress(e.target.value)} required />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+      <div className="profile-grid">
         <div className="form-group">
           <label className="label">City *</label>
           <input className="input" value={city} onChange={e => setCity(e.target.value)} required />
@@ -100,7 +115,7 @@ export default function BusinessProfileForm({ profile, saving, onSave }: Props) 
 
       {profile?.kycStatus !== 'verified' && (
         <div style={{ display: 'flex', gap: 8, padding: 12, background: 'rgba(99,102,241,0.06)', borderRadius: 8, border: '1px solid rgba(99,102,241,0.15)', alignItems: 'flex-start' }}>
-          <ShieldCheck size={16} color="var(--primary)" style={{ flexShrink: 0, marginTop: 2 }} />
+          <ShieldCheck size={16} color="var(--primary-on-light)" style={{ flexShrink: 0, marginTop: 2 }} />
           <p style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
             <strong>Testing Note:</strong> Submitting a valid CAC, TIN, and Address will automatically verify your KYC status instantly in this Sandbox testing environment.
           </p>
@@ -121,6 +136,20 @@ export default function BusinessProfileForm({ profile, saving, onSave }: Props) 
           {saving ? 'Saving...' : 'Update Profile & KYC'}
         </button>
       </div>
+
+      <style>{`
+        .profile-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 16px;
+        }
+        @media (max-width: 768px) {
+          .profile-grid {
+            grid-template-columns: 1fr;
+            gap: 12px;
+          }
+        }
+      `}</style>
     </form>
   );
 }

@@ -1,6 +1,7 @@
 import {
   Injectable,
   NotFoundException,
+  BadRequestException,
   Inject,
   forwardRef,
 } from '@nestjs/common';
@@ -10,11 +11,13 @@ import { Invoice } from './entities/invoice.entity';
 import { Transaction } from './entities/transaction.entity';
 import { CreateInvoiceDto } from './dto/invoice.dto';
 import { SubscribersService } from '../subscribers/subscribers.service';
-import { PaymentStatus, PaymentMethod } from '../../shared/enums';
+import { PaymentStatus, PaymentMethod, AccountType } from '../../shared/enums';
 import { NombaService } from '../../core/nomba/nomba.service';
 import { Subscription } from '../subscribers/entities/subscription.entity';
 import { PortalPdfService } from '../subscribers/portal-pdf.service';
 import { Response } from 'express';
+import { MerchantsService } from '../merchants/merchants.service';
+import { Merchant } from '../merchants/entities/merchant.entity';
 
 @Injectable()
 export class BillingService {
@@ -29,6 +32,8 @@ export class BillingService {
     private readonly nombaService: NombaService,
     @Inject(forwardRef(() => PortalPdfService))
     private readonly pdfService: PortalPdfService,
+    @Inject(forwardRef(() => MerchantsService))
+    private readonly merchantsService: MerchantsService,
   ) {}
 
   async streamInvoicePdf(
@@ -59,6 +64,7 @@ export class BillingService {
 
     const subtotal = lineItems.reduce((sum, item) => sum + item.amount, 0);
     const totalAmount = subtotal; // No taxes/discounts on manual invoices for simplicity
+    await this.enforceTransactionLimits(merchantId, totalAmount);
     const currency = dto.currency || 'NGN';
     const invoiceNumber = `INV-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`;
 
@@ -136,6 +142,7 @@ export class BillingService {
     paymentMethod: PaymentMethod,
     isInitial = false,
   ): Promise<Invoice> {
+    await this.enforceTransactionLimits(merchantId, amount);
     const subscriber = await this.subscribersService.findOne(
       merchantId,
       subscriberId,
@@ -271,4 +278,38 @@ export class BillingService {
 
     return savedInvoice;
   }
+
+  private async enforceTransactionLimits(merchantId: string, amount: number): Promise<void> {
+    const merchant = await this.invoiceRepo.manager.getRepository(Merchant).findOne({
+      where: { id: merchantId },
+    });
+
+    if (!merchant) {
+      throw new NotFoundException('Merchant not found');
+    }
+
+    // 1. Block real external payments for demo accounts
+    if (merchant.accountType === AccountType.DEMO) {
+      throw new BadRequestException('Demo accounts cannot process real card or bank payments.');
+    }
+
+    // 2. Fetch merchant configuration
+    const config = await this.merchantsService.getMerchantConfig(merchantId);
+
+    // Check single transaction limit
+    if (config.limits.maxTransactionAmount !== -1 && amount > config.limits.maxTransactionAmount) {
+      throw new BadRequestException(
+        `Transaction of ₦${amount} exceeds the single transaction limit of ₦${config.limits.maxTransactionAmount} set for unverified accounts. Please complete KYC under Settings to remove this limit.`,
+      );
+    }
+
+    // Check monthly volume limit
+    const projectedVolume = config.usage.currentMonthlyVolume + amount;
+    if (config.limits.maxMonthlyVolume !== -1 && projectedVolume > config.limits.maxMonthlyVolume) {
+      throw new BadRequestException(
+        `Transaction of ₦${amount} exceeds your remaining monthly volume limit of ₦${Math.max(0, config.limits.maxMonthlyVolume - config.usage.currentMonthlyVolume)}. Please complete KYC under Settings to remove this limit.`,
+      );
+    }
+  }
 }
+

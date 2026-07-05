@@ -84,7 +84,7 @@ export default function PayoutBankForm({ profile, saving, onSave }: Props) {
     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       <div style={{ borderBottom: '1px solid var(--border-light)', paddingBottom: 12 }}>
         <h3 style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Banknote size={16} color="var(--primary)" />
+          <Banknote size={16} color="var(--primary-on-light)" />
           Payout Settlement Bank Details
         </h3>
         <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
@@ -92,7 +92,7 @@ export default function PayoutBankForm({ profile, saving, onSave }: Props) {
         </p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+      <div className="bank-grid">
         <div className="form-group">
           <label className="label">Settlement Bank *</label>
           <SearchableBankSelect
@@ -124,20 +124,46 @@ export default function PayoutBankForm({ profile, saving, onSave }: Props) {
             value={accountName}
             readOnly
             required
-            style={{ background: 'var(--bg-secondary)', cursor: 'not-allowed', paddingRight: resolvingAccount ? 36 : 12 }}
+            style={{
+              background: 'var(--bg-secondary)',
+              cursor: 'not-allowed',
+              paddingRight: resolvingAccount ? 40 : 12,
+              fontWeight: 500,
+              color: 'var(--text-primary)',
+            }}
           />
           {resolvingAccount && (
-            <Loader2 size={16} className="animate-spin" style={{ position: 'absolute', right: 12, top: 12, color: 'var(--primary)' }} />
+            <div style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', display: 'flex', alignItems: 'center' }}>
+              <Loader2 size={16} className="animate-spin" color="var(--primary-on-light)" />
+            </div>
           )}
         </div>
         {resolveError && <p style={{ color: 'var(--destructive)', fontSize: 12, marginTop: 4 }}>{resolveError}</p>}
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
-        <button type="submit" className="btn btn-primary" disabled={saving || !accountName || resolvingAccount}>
-          {saving ? 'Saving...' : 'Save Settlement Details'}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 8 }}>
+        <button
+          type="submit"
+          className="btn btn-primary"
+          disabled={saving || resolvingAccount || !accountName || !bankCode || !accountNumber}
+        >
+          {saving ? 'Saving...' : 'Link Payout Account'}
         </button>
       </div>
+
+      <style>{`
+        .bank-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 16px;
+        }
+        @media (max-width: 768px) {
+          .bank-grid {
+            grid-template-columns: 1fr;
+            gap: 12px;
+          }
+        }
+      `}</style>
     </form>
   );
 }

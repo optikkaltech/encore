@@ -317,6 +317,8 @@ export class MerchantsController {
         features: tierConfig?.features || [],
         whiteLabelEnabled: merchant.isWhiteLabelEnabled,
         customDomain: merchant.customDomain,
+        brandLogoUrl: merchant.brandLogoUrl,
+        brandPrimaryColor: merchant.brandPrimaryColor,
         onboardingCompleted:
           merchant.accountType === 'demo' ||
           merchant.settings?.onboardingCompleted === true ||

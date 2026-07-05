@@ -8,6 +8,7 @@ import { SubscribersModule } from '../subscribers/subscribers.module';
 import { TenancyModule } from '../../core/tenancy/tenancy.module';
 import { AuditModule } from '../../core/audit/audit.module';
 import { NombaModule } from '../../core/nomba/nomba.module';
+import { MerchantsModule } from '../merchants/merchants.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { NombaModule } from '../../core/nomba/nomba.module';
     forwardRef(() => NombaModule),
     TenancyModule,
     AuditModule,
+    forwardRef(() => MerchantsModule),
   ],
   controllers: [BillingController],
   providers: [BillingService],

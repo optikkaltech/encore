@@ -57,7 +57,7 @@ export default function TransactionsPage() {
   return (
     <div style={{ animation: 'fadeIn 300ms ease-out', padding: 'var(--space-md) 0' }}>
       {/* Top Header Section */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-xl)' }}>
+      <div className="page-header">
         <div>
           <h1 style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 600, color: 'var(--text-primary)', marginBottom: 4 }}>
             Transactions
@@ -162,11 +162,11 @@ export default function TransactionsPage() {
               <tr>
                 <th>Date & ID</th>
                 <th>Subscriber</th>
-                <th>Type</th>
+                <th className="hide-on-mobile">Type</th>
                 <th>Amount</th>
-                <th>Method</th>
+                <th className="hide-on-mobile">Method</th>
                 <th>Status</th>
-                <th>Reference</th>
+                <th className="hide-on-mobile">Reference</th>
                 <th style={{ textAlign: 'right' }}>Actions</th>
               </tr>
             </thead>
@@ -195,7 +195,7 @@ export default function TransactionsPage() {
                       <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>Unknown</span>
                     )}
                   </td>
-                  <td>
+                  <td className="hide-on-mobile">
                     <span className={`badge ${getTypeBadgeClass(txn.type)}`} style={{ textTransform: 'capitalize' }}>
                       {txn.type.replace('_', ' ')}
                     </span>
@@ -203,7 +203,7 @@ export default function TransactionsPage() {
                   <td style={{ fontWeight: 600 }}>
                     {txn.currency} {Number(txn.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                   </td>
-                  <td>
+                  <td className="hide-on-mobile">
                     <span style={{ fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 4, textTransform: 'capitalize' }}>
                       <CreditCard size={11} className="text-secondary" />
                       {txn.paymentMethod.replace('_', ' ')}
@@ -214,7 +214,7 @@ export default function TransactionsPage() {
                       {txn.status}
                     </span>
                   </td>
-                  <td style={{ fontFamily: 'monospace', fontSize: 12, color: 'var(--text-secondary)' }}>
+                  <td className="hide-on-mobile" style={{ fontFamily: 'monospace', fontSize: 12, color: 'var(--text-secondary)' }}>
                     {txn.nombaReference ? (
                       <span title={txn.nombaReference}>
                         {txn.nombaReference.substring(0, 12)}...

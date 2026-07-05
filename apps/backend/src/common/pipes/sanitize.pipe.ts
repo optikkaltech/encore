@@ -118,6 +118,11 @@ export class SanitizePipe implements PipeTransform {
   }
 
   private sanitizeString(value: string, fieldName: string): string {
+    // If it is a valid hex color, bypass sanitization (safe since it only contains # and hex digits)
+    if (/^#[0-9a-fA-F]{3,8}$/.test(value)) {
+      return value;
+    }
+
     // Additional XSS prevention - preserve URL structure for link/callback fields
     const isUrlField =
       /url|link|callback|uri|redirect|href/i.test(fieldName) ||

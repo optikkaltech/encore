@@ -21,8 +21,8 @@ export default function PayoutsStats({ balance, loading }: Props) {
       label: 'Total Earned',
       value: balance ? fmt(balance.totalEarned) : '₦0.00',
       sub: 'From subscriber payments',
-      color: 'var(--primary)',
-      bg: 'rgba(99,102,241,0.06)',
+      color: 'var(--primary-on-light)',
+      bg: 'rgba(11,46,40,0.05)',
     },
     {
       label: 'Total Paid Out',

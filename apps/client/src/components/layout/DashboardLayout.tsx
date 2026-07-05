@@ -12,15 +12,30 @@ import CommandBar from '../common/CommandBar';
 export default function DashboardLayout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    const saved = localStorage.getItem('encore-theme');
+    if (saved === 'dark' || saved === 'light') return saved;
+    return 'light';
+  });
   const location = useLocation();
+
+  // Sync theme with HTML document element attribute
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('encore-theme', theme);
+  }, [theme]);
 
   // Close mobile menu on route change
   useEffect(() => {
     setMobileMenuOpen(false);
   }, [location.pathname]);
 
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'light' ? 'dark' : 'light');
+  };
+
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-secondary)' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-page)', overflow: 'hidden', maxWidth: '100vw' }}>
       <CommandBar />
       
       {/* Mobile Sidebar Backdrop */}
@@ -54,15 +69,23 @@ export default function DashboardLayout() {
           display: 'flex',
           flexDirection: 'column',
           minHeight: '100vh',
+          minWidth: 0,        /* prevent flex child from overflowing */
+          overflow: 'hidden',
         }}
       >
-        <TopBar onMenuClick={() => setMobileMenuOpen(true)} />
+        <TopBar 
+          onMenuClick={() => setMobileMenuOpen(true)} 
+          theme={theme}
+          onThemeToggle={toggleTheme}
+        />
         <main style={{
           flex: 1,
           padding: 'var(--space-lg) var(--space-xl)',
           maxWidth: 1400,
           width: '100%',
           margin: '0 auto',
+          overflow: 'hidden',
+          boxSizing: 'border-box',
         }}>
           <Outlet />
         </main>
@@ -75,6 +98,14 @@ export default function DashboardLayout() {
         @media (max-width: 768px) {
           .main-content-wrapper {
             margin-left: 0 !important;
+            width: 100vw;
+            max-width: 100vw;
+          }
+          main {
+            padding: var(--space-md) var(--space-sm) !important;
+            overflow-x: hidden;
+            max-width: 100%;
+            width: 100%;
           }
         }
       `}</style>

@@ -28,6 +28,7 @@ import {
 import { AuditService } from '../../core/audit';
 import { SecureLogger } from '../../common/services/secure-logger.service';
 import { encryptAtRest, sanitizeUrl, hashEmail } from '../../common/utils/security.utils';
+import { verifyAccountNameMatch } from '../../common/utils/compliance.utils';
 import { PricingTierConfig } from '../../config/pricing.config';
 import { SystemConfigService } from '../system-config/system-config.service';
 import { Transaction } from '../billing/entities/transaction.entity';
@@ -401,6 +402,18 @@ export class MerchantsService implements OnApplicationBootstrap {
 
     if (!tierConfig) {
       throw new BadRequestException('Invalid pricing tier');
+    }
+
+    // 1. Enforce KYC verification to select premium plans (Growth, Scale, Enterprise)
+    if (dto.tier !== PricingTier.STARTER && merchant.kycStatus !== KycStatus.VERIFIED) {
+      throw new BadRequestException('KYC verification is required to subscribe to premium plans.');
+    }
+
+    // 2. Validate downgrade subscriber limits
+    if (tierConfig.maxSubscribers !== -1 && merchant.currentSubscriberCount > tierConfig.maxSubscribers) {
+      throw new BadRequestException(
+        `Cannot change plan: Your active subscriber count (${merchant.currentSubscriberCount}) exceeds the limit of the ${tierConfig.name} plan (${tierConfig.maxSubscribers}).`,
+      );
     }
 
     const oldTier = merchant.pricingTier;
@@ -787,6 +800,28 @@ export class MerchantsService implements OnApplicationBootstrap {
       merchant.webhookSecret = dto.webhookSecret;
     }
 
+    if (dto.payoutBankAccount !== undefined && dto.payoutBankAccount !== null) {
+      const payoutBank = dto.payoutBankAccount as any;
+      if (payoutBank.accountNumber && payoutBank.accountName) {
+        const ownerName = merchant.settings?.ownerName as string | undefined;
+        if (!ownerName) {
+          throw new BadRequestException("Business Owner's Full Name must be configured in settings first.");
+        }
+
+        const isNameMatch = verifyAccountNameMatch(
+          payoutBank.accountName,
+          merchant.businessName,
+          ownerName,
+        );
+
+        if (!isNameMatch) {
+          throw new BadRequestException(
+            `Bank account name mismatch. The settlement account must belong to either "${merchant.businessName}" or "${ownerName}".`,
+          );
+        }
+      }
+    }
+
     merchant.settings = {
       ...(merchant.settings || {}),
       ...(dto.notifications !== undefined ? { notifications: dto.notifications } : {}),
@@ -840,6 +875,7 @@ export class MerchantsService implements OnApplicationBootstrap {
   async updateProfile(
     merchantId: string,
     dto: {
+      ownerName?: string;
       businessName?: string;
       phone?: string;
       registrationNumber?: string;
@@ -851,6 +887,13 @@ export class MerchantsService implements OnApplicationBootstrap {
     },
   ): Promise<Merchant> {
     const merchant = await this.findOne(merchantId);
+
+    if (dto.ownerName !== undefined) {
+      merchant.settings = {
+        ...(merchant.settings || {}),
+        ownerName: dto.ownerName,
+      };
+    }
 
     if (dto.businessName !== undefined) merchant.businessName = dto.businessName;
     if (dto.phone !== undefined) merchant.phone = dto.phone;

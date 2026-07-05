@@ -41,7 +41,7 @@ export default function DunningPage() {
       </div>
 
       {/* Main Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: selectedLog ? '1.5fr 1fr' : '1fr', gap: 20 }}>
+      <div className="dunning-grid">
         {/* Left: Dunning table */}
         <div className="card table-container" style={{ padding: 0 }}>
           {isLoading ? (
@@ -128,6 +128,20 @@ export default function DunningPage() {
           </div>
         )}
       </div>
+
+      <style>{`
+        .dunning-grid {
+          display: grid;
+          grid-template-columns: ${selectedLog ? '1.5fr 1fr' : '1fr'};
+          gap: 20px;
+        }
+        @media (max-width: 1024px) {
+          .dunning-grid {
+            grid-template-columns: 1fr;
+            gap: 16px;
+          }
+        }
+      `}</style>
     </div>
   );
 }

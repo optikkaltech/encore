@@ -11,9 +11,10 @@ import { MerchantLedger } from './entities/merchant-ledger.entity';
 import { Transaction } from '../billing/entities/transaction.entity';
 import { Merchant } from '../merchants/entities/merchant.entity';
 import { CreatePayoutDto } from './dto/payout.dto';
-import { PayoutStatus, LedgerEntryType, PaymentStatus } from '../../shared/enums';
+import { PayoutStatus, LedgerEntryType, PaymentStatus, KycStatus } from '../../shared/enums';
 import { NombaService } from '../../core/nomba/nomba.service';
 import { AuditService } from '../../core/audit';
+import { verifyAccountNameMatch } from '../../common/utils/compliance.utils';
 
 const PAYOUT_FEE = 50; // ₦50 flat platform fee per payout
 
@@ -135,6 +136,36 @@ export class PayoutsService {
    * Request a payout — validates balance, triggers Nomba transfer, creates ledger debit.
    */
   async createPayout(merchantId: string, dto: CreatePayoutDto): Promise<Payout> {
+    const merchantRepo = this.payoutRepo.manager.getRepository(Merchant);
+    const merchant = await merchantRepo.findOne({ where: { id: merchantId } });
+    if (!merchant) {
+      throw new NotFoundException('Merchant not found');
+    }
+
+    // 1. Enforce KYC Status
+    if (merchant.kycStatus !== KycStatus.VERIFIED) {
+      throw new BadRequestException('KYC verification is required before initiating withdrawals');
+    }
+
+    // 2. Enforce Owner Name Configured
+    const ownerName = merchant.settings?.ownerName as string | undefined;
+    if (!ownerName) {
+      throw new BadRequestException("Business Owner's Full Name must be configured in settings first.");
+    }
+
+    // 3. Enforce Bank Account Name matches Business Name or Owner Name
+    const isNameMatch = verifyAccountNameMatch(
+      dto.bankAccountName,
+      merchant.businessName,
+      ownerName,
+    );
+
+    if (!isNameMatch) {
+      throw new BadRequestException(
+        `Payout account name mismatch. The settlement account must belong to either "${merchant.businessName}" or "${ownerName}".`,
+      );
+    }
+
     const balance = await this.getAvailableBalance(merchantId);
     const netAmount = dto.amount - PAYOUT_FEE;
 

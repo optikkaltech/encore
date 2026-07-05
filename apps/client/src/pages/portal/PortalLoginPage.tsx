@@ -8,6 +8,7 @@ import { ROUTES } from '../../constants/app.constants';
 /**
  * Portal Login Page — accessed via /portal/login?merchant=<merchantId>
  * Subscriber enters email + password to get a portalToken.
+ * Uses standard system CSS variables for colors, ensuring consistency.
  */
 export default function PortalLoginPage() {
   const [searchParams] = useSearchParams();
@@ -64,24 +65,63 @@ export default function PortalLoginPage() {
     }
   };
 
-  const brandColor = config?.brandColor || '#4A4A4A';
-
   return (
     <div style={{
       minHeight: '100vh',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      padding: 'var(--space-lg)',
+      padding: '24px',
       background: 'var(--bg-secondary)',
     }}>
-      <div style={{
-        width: '100%',
-        maxWidth: 400,
-        animation: 'slideUp 300ms ease-out',
-      }}>
+      {/* Portal-scoped stylesheet reset for login card */}
+      <style>{`
+        .portal-login-card {
+          background: var(--bg-primary);
+          border: 1px solid var(--border-light);
+          border-radius: 16px;
+          padding: 32px;
+          box-shadow: var(--shadow-md);
+        }
+        .portal-login-input {
+          width: 100%;
+          padding: 11px 13px;
+          font-size: 14px;
+          color: var(--text-primary);
+          background: var(--bg-primary);
+          border: 1px solid var(--border-light);
+          border-radius: 8px;
+          outline: none;
+          transition: all 0.15s;
+          box-sizing: border-box;
+        }
+        .portal-login-input:focus {
+          border-color: var(--accent-primary) !important;
+          box-shadow: 0 0 0 3px var(--accent-light);
+        }
+        .portal-merchant-btn {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          width: 100%;
+          padding: 14px 16px;
+          border-radius: 12px;
+          border: 1px solid var(--border-light);
+          background: var(--bg-primary);
+          cursor: pointer;
+          text-align: left;
+          transition: all 200ms ease;
+          box-shadow: var(--shadow-sm);
+        }
+        .portal-merchant-btn:hover {
+          border-color: var(--accent-primary) !important;
+          box-shadow: var(--shadow-md);
+        }
+      `}</style>
+
+      <div style={{ width: '100%', maxWidth: 400 }}>
         {/* Brand */}
-        <div style={{ textAlign: 'center', marginBottom: 'var(--space-xl)' }}>
+        <div style={{ textAlign: 'center', marginBottom: 28 }}>
           {config?.logoUrl ? (
             <img
               src={config.logoUrl}
@@ -93,19 +133,20 @@ export default function PortalLoginPage() {
               width: 52,
               height: 52,
               borderRadius: 14,
-              background: brandColor,
+              background: 'var(--accent-primary)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: 'white',
+              color: 'var(--bg-primary)',
               fontSize: 22,
               fontWeight: 700,
               margin: '0 auto 12px',
+              boxShadow: 'var(--shadow-md)',
             }}>
               {config?.businessName?.[0]?.toUpperCase() || 'E'}
             </div>
           )}
-          <h1 style={{ fontSize: 22, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 4 }}>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 4 }}>
             {config?.businessName ? `${config.businessName} Portal` : 'Subscriber Portal'}
           </h1>
           <p style={{ fontSize: 14, color: 'var(--text-secondary)' }}>
@@ -115,7 +156,7 @@ export default function PortalLoginPage() {
 
         {multipleMerchantsList ? (
           /* Merchant selection list */
-          <div className="card" style={{ padding: 'var(--space-xl)', display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div className="portal-login-card" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div style={{ textAlign: 'center', marginBottom: 8 }}>
               <h2 style={{ fontSize: 18, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 6 }}>
                 Select Business Portal
@@ -126,13 +167,7 @@ export default function PortalLoginPage() {
             </div>
 
             {error && (
-              <div style={{
-                padding: '10px 12px',
-                background: '#FEE2E2',
-                color: '#991B1B',
-                borderRadius: 8,
-                fontSize: 13,
-              }}>
+              <div style={{ padding: '10px 12px', background: 'var(--error-bg)', color: 'var(--error-text)', borderRadius: 8, fontSize: 13 }}>
                 {error}
               </div>
             )}
@@ -143,30 +178,7 @@ export default function PortalLoginPage() {
                   key={m.id}
                   onClick={() => handleSelectMerchant(m.id)}
                   disabled={loading}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 12,
-                    width: '100%',
-                    padding: '14px 16px',
-                    borderRadius: 12,
-                    border: '1px solid var(--border-light)',
-                    background: 'var(--bg-primary)',
-                    cursor: loading ? 'not-allowed' : 'pointer',
-                    textAlign: 'left',
-                    transition: 'all 200ms ease',
-                    boxShadow: 'var(--shadow-xs)',
-                  }}
-                  onMouseOver={e => {
-                    if (!loading) {
-                      e.currentTarget.style.borderColor = m.brandColor || '#7c3aed';
-                      e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
-                    }
-                  }}
-                  onMouseOut={e => {
-                    e.currentTarget.style.borderColor = 'var(--border-light)';
-                    e.currentTarget.style.boxShadow = 'var(--shadow-xs)';
-                  }}
+                  className="portal-merchant-btn"
                 >
                   {m.logoUrl ? (
                     <img src={m.logoUrl} alt="" style={{ width: 36, height: 36, objectFit: 'contain' }} />
@@ -175,11 +187,11 @@ export default function PortalLoginPage() {
                       width: 36,
                       height: 36,
                       borderRadius: 8,
-                      background: m.brandColor || '#7c3aed',
+                      background: 'var(--accent-primary)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      color: '#fff',
+                      color: 'var(--bg-primary)',
                       fontWeight: 700,
                       fontSize: 16
                     }}>
@@ -217,26 +229,20 @@ export default function PortalLoginPage() {
           </div>
         ) : (
           /* Form card */
-          <div className="card" style={{ padding: 'var(--space-xl)' }}>
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
+          <div className="portal-login-card">
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {error && (
-                <div style={{
-                  padding: '10px 12px',
-                  background: '#FEE2E2',
-                  color: '#991B1B',
-                  borderRadius: 8,
-                  fontSize: 13,
-                }}>
+                <div style={{ padding: '10px 12px', background: 'var(--error-bg)', color: 'var(--error-text)', borderRadius: 8, fontSize: 13 }}>
                   {error}
                 </div>
               )}
 
-              <div className="input-group">
-                <label className="input-label">Email address</label>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-secondary)' }}>Email address</label>
                 <input
                   id="portal-email"
                   type="email"
-                  className="input"
+                  className="portal-login-input"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   placeholder="you@example.com"
@@ -245,13 +251,13 @@ export default function PortalLoginPage() {
                 />
               </div>
 
-              <div className="input-group">
-                <label className="input-label">Password</label>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-secondary)' }}>Password</label>
                 <div style={{ position: 'relative' }}>
                   <input
                     id="portal-password"
                     type={showPass ? 'text' : 'password'}
-                    className="input"
+                    className="portal-login-input"
                     style={{ paddingRight: 40 }}
                     value={password}
                     onChange={e => setPassword(e.target.value)}
@@ -285,23 +291,17 @@ export default function PortalLoginPage() {
                 type="submit"
                 className="btn btn-primary btn-full btn-lg"
                 disabled={loading}
-                style={{ background: brandColor, marginTop: 4 }}
+                style={{ marginTop: 8 }}
               >
-                {loading ? (
-                  <><span className="spinner spinner-sm" /> Signing in...</>
-                ) : (
-                  <><LogIn size={16} /> Sign in</>
-                )}
+                {loading ? 'Signing in...' : 'Sign in'}
               </button>
             </form>
           </div>
         )}
 
-        {config?.poweredBy && (
-          <p style={{ textAlign: 'center', fontSize: 11, color: 'var(--text-muted)', marginTop: 'var(--space-lg)' }}>
-            Powered by <strong style={{ color: brandColor }}>Encore</strong>
-          </p>
-        )}
+        <p style={{ textAlign: 'center', fontSize: 11, color: 'var(--text-muted)', marginTop: 24 }}>
+          Powered by <strong>Encore</strong>
+        </p>
       </div>
     </div>
   );

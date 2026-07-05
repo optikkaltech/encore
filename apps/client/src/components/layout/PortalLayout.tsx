@@ -25,8 +25,6 @@ export default function PortalLayout() {
   const navigate = useNavigate();
   const isDesktop = useDesktopDisplay();
   const [mobileOpen, setMobileOpen] = useState(false);
-  
-  const brandColor = config?.brandColor || '#7c3aed';
 
   const handleLogout = () => {
     logout();
@@ -42,13 +40,14 @@ export default function PortalLayout() {
         ) : (
           <div style={{
             width: 32, height: 32, borderRadius: 8,
-            background: brandColor, display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: '#fff', fontWeight: 700, fontSize: 14,
+            background: 'var(--nomba-lime)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: 'var(--nomba-teal)', fontWeight: 800, fontSize: 15,
+            boxShadow: '0 0 12px rgba(200, 255, 0, 0.3)',
           }}>
-            {config?.businessName?.[0] || 'E'}
+            {config?.businessName?.[0]?.toUpperCase() || 'E'}
           </div>
         )}
-        <span style={{ fontWeight: 700, fontSize: 16, color: 'var(--text-primary)' }}>
+        <span style={{ fontWeight: 700, fontSize: 16, color: '#FFFFFF', letterSpacing: '-0.3px' }}>
           {config?.businessName || 'Subscriber Portal'}
         </span>
       </div>
@@ -71,11 +70,26 @@ export default function PortalLayout() {
                 borderRadius: 8,
                 fontSize: 14,
                 fontWeight: isActive ? 600 : 400,
-                color: isActive ? brandColor : 'var(--text-secondary)',
-                background: isActive ? `${brandColor}12` : 'transparent',
+                color: isActive ? 'var(--nomba-lime)' : 'rgba(255, 255, 255, 0.65)',
+                background: isActive ? 'rgba(200, 255, 0, 0.12)' : 'transparent',
                 textDecoration: 'none',
                 transition: 'all 0.15s',
+                borderLeft: isActive ? '3px solid var(--nomba-lime)' : '3px solid transparent',
               })}
+              onMouseEnter={(e) => {
+                const target = e.currentTarget as HTMLElement;
+                if (!target.classList.contains('active')) {
+                  target.style.background = 'rgba(255, 255, 255, 0.06)';
+                  target.style.color = '#FFFFFF';
+                }
+              }}
+              onMouseLeave={(e) => {
+                const target = e.currentTarget as HTMLElement;
+                if (!target.classList.contains('active')) {
+                  target.style.background = 'transparent';
+                  target.style.color = 'rgba(255, 255, 255, 0.65)';
+                }
+              }}
             >
               <Icon size={18} />
               {link.label}
@@ -85,22 +99,23 @@ export default function PortalLayout() {
       </div>
 
       {/* Bottom Profile & Sign out */}
-      <div style={{ borderTop: '1px solid var(--border-primary)', paddingTop: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div style={{ borderTop: '1px solid rgba(255, 255, 255, 0.07)', paddingTop: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{
-            width: 36, height: 36, borderRadius: '50%', background: 'var(--bg-secondary)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)',
-            flexShrink: 0
+            width: 36, height: 36, borderRadius: '50%', background: 'rgba(200, 255, 0, 0.15)',
+            border: '1px solid rgba(200, 255, 0, 0.25)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--nomba-lime)',
+            flexShrink: 0, fontWeight: 700
           }}>
-            <span style={{ fontWeight: 600, fontSize: 13 }}>
+            <span>
               {subscriber?.firstName?.[0]?.toUpperCase()}{subscriber?.lastName?.[0]?.toUpperCase()}
             </span>
           </div>
           <div style={{ overflow: 'hidden', flex: 1 }}>
-            <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
+            <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: '#FFFFFF', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
               {subscriber?.firstName} {subscriber?.lastName}
             </p>
-            <p style={{ margin: 0, fontSize: 11, color: 'var(--text-muted)', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
+            <p style={{ margin: 0, fontSize: 11, color: 'rgba(255, 255, 255, 0.4)', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
               {subscriber?.email}
             </p>
           </div>
@@ -115,13 +130,21 @@ export default function PortalLayout() {
             width: '100%',
             padding: '10px 14px',
             borderRadius: 8,
-            border: '1px solid var(--border-primary)',
-            background: 'var(--bg-primary)',
-            color: 'var(--text-secondary)',
+            border: 'none',
+            background: 'rgba(255, 255, 255, 0.07)',
+            color: 'rgba(255, 255, 255, 0.7)',
             fontSize: 13,
             fontWeight: 500,
             cursor: 'pointer',
             transition: 'all 0.15s',
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.12)';
+            e.currentTarget.style.color = '#FFFFFF';
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.07)';
+            e.currentTarget.style.color = 'rgba(255, 255, 255, 0.7)';
           }}
         >
           <LogOutIcon size={14} />
@@ -136,8 +159,8 @@ export default function PortalLayout() {
       {/* Mobile Top Header */}
       {!isDesktop && (
         <header style={{
-          background: 'var(--bg-card)',
-          borderBottom: '1px solid var(--border-primary)',
+          background: 'var(--nomba-teal)',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.07)',
           padding: '0 16px',
           height: 60,
           display: 'flex',
@@ -153,20 +176,20 @@ export default function PortalLayout() {
             ) : (
               <div style={{
                 width: 28, height: 28, borderRadius: 6,
-                background: brandColor, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: '#fff', fontWeight: 700, fontSize: 12,
+                background: 'var(--nomba-lime)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: 'var(--nomba-teal)', fontWeight: 800, fontSize: 13,
               }}>
-                {config?.businessName?.[0] || 'E'}
+                {config?.businessName?.[0]?.toUpperCase() || 'E'}
               </div>
             )}
-            <span style={{ fontWeight: 700, fontSize: 15, color: 'var(--text-primary)' }}>
+            <span style={{ fontWeight: 700, fontSize: 15, color: '#FFFFFF' }}>
               {config?.businessName || 'Subscriber Portal'}
             </span>
           </div>
 
           <button
             onClick={() => setMobileOpen(true)}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', padding: 6 }}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255, 255, 255, 0.7)', padding: 6 }}
           >
             <MenuIcon size={22} />
           </button>
@@ -185,7 +208,7 @@ export default function PortalLayout() {
           <div style={{
             position: 'relative',
             width: 280,
-            background: 'var(--bg-card)',
+            background: 'var(--nomba-teal)',
             height: '100%',
             boxShadow: 'var(--shadow-lg)',
             display: 'flex',
@@ -201,7 +224,7 @@ export default function PortalLayout() {
                 background: 'none',
                 border: 'none',
                 cursor: 'pointer',
-                color: 'var(--text-secondary)'
+                color: 'rgba(255, 255, 255, 0.7)'
               }}
             >
               <XIcon size={20} />
@@ -215,12 +238,13 @@ export default function PortalLayout() {
       {isDesktop && (
         <aside style={{
           width: 260,
-          background: 'var(--bg-card)',
-          borderRight: '1px solid var(--border-primary)',
+          background: 'var(--nomba-teal)',
+          borderRight: 'none',
           height: '100vh',
           position: 'sticky',
           top: 0,
           flexShrink: 0,
+          boxShadow: '4px 0 24px rgba(0,0,0,0.15)',
         }}>
           {navContent}
         </aside>

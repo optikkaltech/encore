@@ -1,5 +1,4 @@
 import { usePortalPayments } from '../../hooks/usePortal';
-import { usePortalStore } from '../../store/portal.store';
 import { CreditCardIcon } from '../../assets';
 import toast from 'react-hot-toast';
 
@@ -9,16 +8,15 @@ function statusColor(status: string) {
     failed: { bg: '#fee2e2', text: '#dc2626' },
     pending: { bg: '#fef9c3', text: '#ca8a04' },
   };
-  return map[status?.toLowerCase()] || { bg: '#f3f4f6', text: '#6b7280' };
+  return map[status?.toLowerCase()] || { bg: 'var(--bg-secondary)', text: 'var(--text-secondary)' };
 }
 
 /**
  * Portal Payments Page — lists all payment transactions for the subscriber.
+ * Uses standard system CSS variables for colors, ensuring consistency.
  */
 export default function PortalPaymentsPage() {
   const { payments, loading, payingId, payPending } = usePortalPayments();
-  const { config } = usePortalStore();
-  const brandColor = config?.brandColor || '#7c3aed';
 
   const formatCurrency = (n: number, c = 'NGN') =>
     new Intl.NumberFormat('en-NG', { style: 'currency', currency: c }).format(n);
@@ -32,50 +30,83 @@ export default function PortalPaymentsPage() {
 
   return (
     <div>
+      {/* Portal page-scoped CSS rules */}
+      <style>{`
+        .portal-card {
+          background: var(--bg-primary);
+          border: 1px solid var(--border-light);
+          border-radius: 12px;
+          padding: 24px;
+          box-shadow: var(--shadow-sm);
+        }
+        .portal-card-table {
+          background: var(--bg-primary);
+          border: 1px solid var(--border-light);
+          border-radius: 12px;
+          box-shadow: var(--shadow-sm);
+          overflow: hidden;
+          padding: 0;
+        }
+        .portal-th {
+          padding: 12px 16px;
+          text-align: left;
+          font-weight: 600;
+          font-size: 12px;
+          color: var(--text-secondary);
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+        }
+        .portal-td {
+          padding: 14px 16px;
+          color: var(--text-primary);
+          font-size: 14px;
+        }
+        .portal-tr:hover {
+          background: var(--bg-secondary);
+        }
+      `}</style>
+
       <div style={{ marginBottom: 24 }}>
         <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 4 }}>Payment History</h1>
         <p style={{ fontSize: 14, color: 'var(--text-secondary)' }}>All transactions made for your subscription</p>
       </div>
 
       {payments.length === 0 ? (
-        <div className="card" style={{ padding: 48, textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <div className="portal-card" style={{ padding: 48, textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <CreditCardIcon size={40} style={{ color: 'var(--text-muted)', marginBottom: 12 }} />
-          <p style={{ color: 'var(--text-secondary)', fontSize: 15 }}>No payments recorded yet</p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 15, margin: 0 }}>No payments recorded yet</p>
         </div>
       ) : (
-        <div className="card" style={{ overflow: 'hidden', padding: 0 }}>
+        <div className="portal-card-table">
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14, minWidth: 600 }}>
               <thead>
-                <tr style={{ background: 'var(--bg-secondary)' }}>
+                <tr style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-light)' }}>
                   {['Date', 'Type', 'Method', 'Invoice', 'Amount', 'Status'].map(h => (
-                    <th key={h} style={{
-                      padding: '12px 16px', textAlign: 'left', fontWeight: 600,
-                      fontSize: 12, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em',
-                    }}>{h}</th>
+                    <th key={h} className="portal-th">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {payments.map((p, i) => {
+                {payments.map((p) => {
                   const sc = statusColor(p.status);
                   return (
-                    <tr key={p.id} style={{ borderTop: '1px solid var(--border-primary)', background: i % 2 === 0 ? 'transparent' : 'var(--bg-secondary)' }}>
-                      <td style={{ padding: '12px 16px', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>{formatDate(p.processedAt || p.createdAt)}</td>
-                      <td style={{ padding: '12px 16px', color: 'var(--text-secondary)', textTransform: 'capitalize' }}>{p.type?.replace('_', ' ')}</td>
-                      <td style={{ padding: '12px 16px', color: 'var(--text-secondary)', textTransform: 'capitalize' }}>{p.paymentMethod?.replace('_', ' ')}</td>
-                      <td style={{ padding: '12px 16px', color: 'var(--text-secondary)' }}>{p.invoiceNumber || '—'}</td>
-                      <td style={{ padding: '12px 16px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                    <tr key={p.id} className="portal-tr" style={{ borderBottom: '1px solid var(--border-light)' }}>
+                      <td className="portal-td" style={{ whiteSpace: 'nowrap' }}>{formatDate(p.processedAt || p.createdAt)}</td>
+                      <td className="portal-td" style={{ textTransform: 'capitalize', color: 'var(--text-secondary)' }}>{p.type?.replace('_', ' ')}</td>
+                      <td className="portal-td" style={{ textTransform: 'capitalize', color: 'var(--text-secondary)' }}>{p.paymentMethod?.replace('_', ' ')}</td>
+                      <td className="portal-td" style={{ color: 'var(--text-secondary)' }}>{p.invoiceNumber || '—'}</td>
+                      <td className="portal-td" style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
                         {formatCurrency(p.amount, p.currency)}
                       </td>
-                      <td style={{ padding: '12px 16px' }}>
+                      <td className="portal-td">
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                           <span style={{
-                            display: 'inline-block', padding: '2px 10px', borderRadius: 20,
-                            fontSize: 12, fontWeight: 600,
+                            display: 'inline-block', padding: '3px 10px', borderRadius: 20,
+                            fontSize: 12, fontWeight: 700,
                             background: sc.bg, color: sc.text,
                           }}>
-                            {p.status}
+                            {p.status.toUpperCase()}
                           </span>
                           {p.status?.toLowerCase() === 'pending' && (
                             <button
@@ -88,18 +119,7 @@ export default function PortalPaymentsPage() {
                                 }
                               }}
                               disabled={payingId === p.id}
-                              style={{
-                                padding: '6px 12px',
-                                borderRadius: 6,
-                                border: 'none',
-                                background: brandColor,
-                                color: '#fff',
-                                fontSize: 12,
-                                fontWeight: 600,
-                                cursor: payingId === p.id ? 'not-allowed' : 'pointer',
-                                opacity: payingId === p.id ? 0.7 : 1,
-                                transition: 'all 0.15s',
-                              }}
+                              className="btn btn-primary btn-sm"
                             >
                               {payingId === p.id ? 'Paying...' : 'Pay Now'}
                             </button>

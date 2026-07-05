@@ -95,14 +95,14 @@ export default function SubscribersPage() {
   return (
     <div style={{ animation: 'fadeIn 300ms ease-out', padding: 'var(--space-md) 0' }}>
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-xl)' }}>
+      <div className="page-header">
         <div>
           <h1 style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 600, color: 'var(--text-primary)', marginBottom: 4 }}>
             Subscribers
           </h1>
           <p style={{ color: 'var(--text-secondary)' }}>Manage your customer database, virtual accounts, and active subscriptions.</p>
         </div>
-        <div style={{ display: 'flex', gap: 12 }}>
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
           <button className="btn btn-secondary" onClick={() => setShowBulkUploadModal(true)}>
             <UploadCloud size={16} /> Bulk Upload (CSV)
           </button>
@@ -151,7 +151,7 @@ export default function SubscribersPage() {
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr>
-                <th style={{ width: 40 }}>
+                <th className="hide-on-mobile" style={{ width: 40 }}>
                   <input 
                     type="checkbox" 
                     onChange={handleSelectAll} 
@@ -161,9 +161,9 @@ export default function SubscribersPage() {
                 <th>Customer Name</th>
                 <th>Contact & Virtual Account</th>
                 <th>Active Plan</th>
-                <th>Method</th>
+                <th className="hide-on-mobile">Method</th>
                 <th>Status</th>
-                <th>Next Billing</th>
+                <th className="hide-on-mobile">Next Billing</th>
                 <th style={{ textAlign: 'right' }}>Actions</th>
               </tr>
             </thead>
@@ -174,7 +174,7 @@ export default function SubscribersPage() {
                 );
                 return (
                   <tr key={sub.id}>
-                    <td style={{ width: 40 }}>
+                    <td className="hide-on-mobile" style={{ width: 40 }}>
                       <input 
                         type="checkbox" 
                         checked={selectedIds.includes(sub.id)} 
@@ -182,24 +182,24 @@ export default function SubscribersPage() {
                         onClick={e => e.stopPropagation()} 
                       />
                     </td>
-                    <td onClick={() => openDetailsModal(sub)} style={{ cursor: 'pointer' }}>
-                      <div style={{ fontWeight: 600, color: 'var(--link)', textDecoration: 'underline' }}>
+                    <td onClick={() => openDetailsModal(sub)} style={{ cursor: 'pointer', maxWidth: 140, overflow: 'hidden' }}>
+                      <div style={{ fontWeight: 600, color: 'var(--link)', textDecoration: 'underline', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {sub.firstName} {sub.lastName}
                       </div>
                       <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>ID: {sub.id.substring(0, 8)}...</div>
                     </td>
-                    <td>
-                      <div>{sub.email}</div>
+                    <td style={{ maxWidth: 180, overflow: 'hidden' }}>
+                      <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 13 }}>{sub.email}</div>
                       <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>{sub.phone}</div>
                       {sub.virtualAccountNumber ? (
-                        <div style={{ fontSize: 11, color: 'var(--info)', marginTop: 4, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 4 }}>
-                          <LandmarkIcon size={12} />
-                          <span>{sub.virtualAccountNumber} ({sub.virtualAccountBank || 'Nomba Bank'})</span>
+                        <div style={{ fontSize: 11, color: 'var(--info)', marginTop: 4, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 4, overflow: 'hidden' }}>
+                          <LandmarkIcon size={12} style={{ flexShrink: 0 }} />
+                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sub.virtualAccountNumber} ({sub.virtualAccountBank || 'Nomba Bank'})</span>
                         </div>
                       ) : (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 4 }}>
                           <span style={{ fontSize: 11, color: 'var(--error)', fontStyle: 'italic' }}>
-                            No active virtual account
+                            No virtual account
                           </span>
                           <button
                             className="btn btn-secondary btn-sm"
@@ -223,7 +223,7 @@ export default function SubscribersPage() {
                         <span style={{ fontSize: 13, color: 'var(--text-muted)', fontStyle: 'italic' }}>No Active Plan</span>
                       )}
                     </td>
-                    <td>
+                    <td className="hide-on-mobile">
                       <span className="badge badge-neutral" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, textTransform: 'capitalize' }}>
                         <CreditCard size={11} /> {sub.paymentMethod.replace('_', ' ')}
                       </span>
@@ -231,7 +231,7 @@ export default function SubscribersPage() {
                     <td>
                       <span className={`badge ${getStatusBadgeClass(sub.status)}`}>{sub.status}</span>
                     </td>
-                    <td>
+                    <td className="hide-on-mobile">
                       {sub.nextBillingDate ? (
                         <div style={{ fontSize: 13, display: 'flex', alignItems: 'center', gap: 4 }}>
                           <Calendar size={12} className="text-secondary" />
@@ -358,6 +358,22 @@ export default function SubscribersPage() {
         plans={plans}
         onSubmit={handleBulkSubscribeSubmit}
       />
+      <style>{`
+        .page-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: var(--space-xl);
+          gap: 16px;
+        }
+        @media (max-width: 768px) {
+          .page-header {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 12px;
+          }
+        }
+      `}</style>
     </div>
   );
 }

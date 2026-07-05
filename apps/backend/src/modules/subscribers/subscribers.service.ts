@@ -49,6 +49,19 @@ export class SubscribersService {
     merchantId: string,
     dto: CreateSubscriberDto,
   ): Promise<Subscriber> {
+    const merchant = await this.merchantRepo.findOne({ where: { id: merchantId } });
+    if (!merchant) {
+      throw new NotFoundException('Merchant not found');
+    }
+
+    // Enforce pricing plan subscriber capacity limits
+    const actualCount = await this.subscriberRepo.count({ where: { merchantId } });
+    if (merchant.maxSubscribers !== -1 && actualCount >= merchant.maxSubscribers) {
+      throw new BadRequestException(
+        `Subscriber limit of ${merchant.maxSubscribers} reached for your plan. Please upgrade your subscription plan under Settings.`,
+      );
+    }
+
     const existing = await this.subscriberRepo.findOne({
       where: { merchantId, emailHash: hashEmail(dto.email.toLowerCase().trim()) },
     });
@@ -476,10 +489,22 @@ export class SubscribersService {
     merchantId: string,
     dtoList: CreateSubscriberDto[],
   ): Promise<{ successCount: number; errors: string[] }> {
+    const merchant = await this.merchantRepo.findOne({ where: { id: merchantId } });
+    if (!merchant) {
+      throw new NotFoundException('Merchant not found');
+    }
+
     const errors: string[] = [];
     const subscribersToSave: Subscriber[] = [];
+    let actualCount = await this.subscriberRepo.count({ where: { merchantId } });
 
     for (const dto of dtoList) {
+      // Validate plan limits
+      if (merchant.maxSubscribers !== -1 && (actualCount + subscribersToSave.length) >= merchant.maxSubscribers) {
+        errors.push(`Could not add '${dto.email}': Subscriber limit of ${merchant.maxSubscribers} reached for your plan.`);
+        continue;
+      }
+
       const existing = await this.subscriberRepo.findOne({
         where: { merchantId, emailHash: hashEmail(dto.email.toLowerCase().trim()) },
       });

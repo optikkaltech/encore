@@ -33,7 +33,7 @@ export default function SettingsPage() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 'var(--space-xl)', flexWrap: 'wrap', gap: 12 }}>
         <div>
           <h1 style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 600, color: 'var(--text-primary)', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 10 }}>
-            <Settings size={24} color="var(--primary)" />
+            <Settings size={24} color="var(--nomba-teal)" />
             Settings
           </h1>
           <p style={{ color: 'var(--text-secondary)' }}>Manage your account, branding, and integration settings.</p>
@@ -44,7 +44,7 @@ export default function SettingsPage() {
         </button>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: 24, alignItems: 'start' }}>
+      <div className="settings-grid">
         {/* Sidebar nav */}
         <div className="card" style={{ padding: 8 }}>
           {TABS.map(({ id, label, icon: Icon }) => (
@@ -55,8 +55,9 @@ export default function SettingsPage() {
                 display: 'flex', alignItems: 'center', gap: 10, width: '100%',
                 padding: '10px 14px', borderRadius: 8, border: 'none', cursor: 'pointer',
                 textAlign: 'left', fontSize: 14, fontWeight: activeTab === id ? 600 : 400,
-                background: activeTab === id ? 'rgba(99,102,241,0.08)' : 'transparent',
-                color: activeTab === id ? 'var(--primary)' : 'var(--text-secondary)',
+                background: activeTab === id ? 'rgba(11,46,40,0.07)' : 'transparent',
+                color: activeTab === id ? 'var(--nomba-teal)' : 'var(--text-secondary)',
+                borderLeft: activeTab === id ? '3px solid var(--nomba-lime)' : '3px solid transparent',
                 marginBottom: 2,
                 transition: 'all 0.15s',
               }}
@@ -93,6 +94,21 @@ export default function SettingsPage() {
           )}
         </div>
       </div>
+
+      <style>{`
+        .settings-grid {
+          display: grid;
+          grid-template-columns: 200px 1fr;
+          gap: 24px;
+          align-items: start;
+        }
+        @media (max-width: 768px) {
+          .settings-grid {
+            grid-template-columns: 1fr;
+            gap: 16px;
+          }
+        }
+      `}</style>
     </div>
   );
 }

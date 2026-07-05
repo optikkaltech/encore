@@ -15,7 +15,7 @@ export default function PayoutsPage() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 'var(--space-xl)', flexWrap: 'wrap', gap: 12 }}>
         <div>
           <h1 style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 600, color: 'var(--text-primary)', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 10 }}>
-            <Banknote size={24} color="var(--primary)" />
+            <Banknote size={24} color="var(--primary-on-light)" />
             Payouts
           </h1>
           <p style={{ color: 'var(--text-secondary)' }}>

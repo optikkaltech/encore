@@ -142,7 +142,7 @@ export default function PayoutRequestModal({ balance, submitting, onSubmit, onCl
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
           <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(99,102,241,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Banknote size={22} color="var(--primary)" />
+            <Banknote size={22} color="var(--primary-on-light)" />
           </div>
           <div>
             <h2 style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 2 }}>Request Payout</h2>
@@ -230,7 +230,7 @@ export default function PayoutRequestModal({ balance, submitting, onSubmit, onCl
                     position: 'absolute',
                     right: 12,
                     top: 12,
-                    color: 'var(--primary)',
+                    color: 'var(--primary-on-light)',
                   }}
                 />
               )}
@@ -255,7 +255,7 @@ export default function PayoutRequestModal({ balance, submitting, onSubmit, onCl
 
           {/* Info */}
           <div style={{ display: 'flex', gap: 10, padding: 12, background: 'rgba(99,102,241,0.06)', borderRadius: 8, border: '1px solid rgba(99,102,241,0.15)' }}>
-            <AlertCircle size={16} color="var(--primary)" style={{ flexShrink: 0, marginTop: 2 }} />
+            <AlertCircle size={16} color="var(--primary-on-light)" style={{ flexShrink: 0, marginTop: 2 }} />
             <p style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
               A ₦50 platform fee is deducted from each payout. Transfers are processed via Nomba and typically settle within minutes.
             </p>

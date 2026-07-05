@@ -24,7 +24,7 @@ export default function PlansPage() {
   return (
     <div style={{ animation: 'fadeIn 300ms ease-out', padding: 'var(--space-md) 0' }}>
       {/* Top Header Section */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-xl)' }}>
+      <div className="page-header">
         <div>
           <h1 style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 600, color: 'var(--text-primary)', marginBottom: 4 }}>
             Billing Plans
@@ -95,8 +95,8 @@ export default function PlansPage() {
               <tr>
                 <th>Plan Details</th>
                 <th>Price</th>
-                <th>Billing Cycle</th>
-                <th>Setup / Trial</th>
+                <th className="hide-on-mobile">Billing Cycle</th>
+                <th className="hide-on-mobile">Setup / Trial</th>
                 <th>Status</th>
                 <th style={{ textAlign: 'right' }}>Actions</th>
               </tr>
@@ -116,12 +116,12 @@ export default function PlansPage() {
                   <td style={{ fontWeight: 500 }}>
                     {plan.currency} {Number(plan.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                   </td>
-                  <td>
+                  <td className="hide-on-mobile">
                     <span className="badge badge-neutral" style={{ textTransform: 'capitalize' }}>
                       {plan.frequency}
                     </span>
                   </td>
-                  <td>
+                  <td className="hide-on-mobile">
                     <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
                       {plan.trialDays > 0 ? `${plan.trialDays}d trial` : 'No trial'}
                     </div>
@@ -193,6 +193,23 @@ export default function PlansPage() {
 
       {/* Shared Billing Terminology Glossary */}
       <BillingGlossary />
+
+      <style>{`
+        .page-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: var(--space-xl);
+          gap: 16px;
+        }
+        @media (max-width: 768px) {
+          .page-header {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 12px;
+          }
+        }
+      `}</style>
     </div>
   );
 }

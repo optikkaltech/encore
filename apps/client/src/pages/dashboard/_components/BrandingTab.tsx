@@ -33,7 +33,7 @@ export default function BrandingTab({ profile, saving, onSave }: Props) {
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24 }}>
-        <Palette size={18} color="var(--primary)" />
+        <Palette size={18} color="var(--primary-on-light)" />
         <h2 style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-primary)' }}>White-Label Branding</h2>
       </div>
 

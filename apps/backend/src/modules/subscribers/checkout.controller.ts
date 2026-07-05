@@ -6,6 +6,7 @@ import {
   Body,
   NotFoundException,
   ConflictException,
+  BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, IsNull } from 'typeorm';
@@ -107,6 +108,20 @@ export class CheckoutController {
     const merchant = await this.merchantRepo.findOne({
       where: { id: plan.merchantId },
     });
+    if (!merchant) {
+      throw new NotFoundException('Merchant not found');
+    }
+
+    // Enforce pricing plan subscriber capacity limits
+    const actualCount = await this.subscriberRepo.count({
+      where: { merchantId: plan.merchantId },
+    });
+    if (merchant.maxSubscribers !== -1 && actualCount >= merchant.maxSubscribers) {
+      throw new BadRequestException(
+        `Subscriber limit of ${merchant.maxSubscribers} reached for this provider.`,
+      );
+    }
+
 
     // Create subscriber record
     const inviteToken = randomBytes(32).toString('hex');

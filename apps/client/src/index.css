@@ -1,31 +1,70 @@
 /* ====================================================================
-   Encore Dashboard - Design System
+   Encore Dashboard — Nomba Brand Design System
    ====================================================================
-   Based on the minimalist light UI specification.
-   All colors, spacing, and typography tokens centralized here.
+   Primary Accent : #C8FF00  (Nomba Neon Lime)
+   Dark Surface   : #0B2E28  (Nomba Deep Teal)
+   Light Surface  : #F7FAF7  (Off-white with teal tint)
    ==================================================================== */
 
 :root {
-  /* ========== COLOR PALETTE ========== */
-  --bg-primary: #FFFFFF;
-  --bg-secondary: #F5F5F5;
-  --bg-tertiary: #E8E8E8;
+  /* ========== BRAND PALETTE ========== */
+  --nomba-lime:        #C8FF00;
+  --nomba-lime-hover:  #B0E600;
+  --nomba-lime-glow:   rgba(200, 255, 0, 0.18);
+  --nomba-teal:        #0B2E28;
+  --nomba-teal-mid:    #0F3D35;
+  --nomba-teal-light:  #164D42;
+  --nomba-teal-subtle: #E6F5F2;
 
-  --text-primary: #1A1A1A;
-  --text-secondary: #666666;
-  --text-muted: #999999;
+  /* ========== BACKGROUNDS ========== */
+  --bg-primary:   #FFFFFF;
+  --bg-secondary: #F4F8F6;
+  --bg-tertiary:  #E8F0EC;
+  --bg-card:      #FFFFFF;
+  --bg-page:      #F4F8F6;
 
-  --accent-primary: #4A4A4A;
-  --accent-hover: #333333;
-  --accent-light: #F0F0F0;
+  /* ========== TEXT ========== */
+  --text-primary:   #0D1F1C;
+  --text-secondary: #4A6B62;
+  --text-muted:     #8AACA4;
+  --text-on-dark:   #FFFFFF;
+  --text-on-lime:   #0B2E28;
 
-  --border-light: #E0E0E0;
-  --border-radius: 8px;
+  /* ========== ACCENT / PRIMARY ========== */
+  --primary:          var(--nomba-lime);
+  --primary-hover:    var(--nomba-lime-hover);
+  --primary-fg:       var(--nomba-teal);     /* text on lime buttons */
+  --primary-on-light: var(--nomba-teal);     /* lime has no contrast on white — use teal instead */
+  --accent-primary:   var(--nomba-teal);
+  --accent-hover:     var(--nomba-teal-mid);
+  --accent-light:     var(--nomba-teal-subtle);
 
-  --success: #22C55E;
-  --warning: #F59E0B;
-  --error: #EF4444;
-  --info: #3B82F6;
+  /* ========== BORDERS ========== */
+  --border-light:   #D8EAE5;
+  --border-primary: #B8D8D0;
+  --border-radius:  8px;
+
+  /* ========== STATUS ========== */
+  --success:     #16A34A;
+  --success-bg:  #DCFCE7;
+  --success-text:#166534;
+  --warning:     #D97706;
+  --warning-bg:  #FEF3C7;
+  --warning-text:#92400E;
+  --error:       #DC2626;
+  --error-bg:    #FEE2E2;
+  --error-text:  #991B1B;
+  --info:        #2563EB;
+  --info-bg:     #DBEAFE;
+  --info-text:   #1E40AF;
+
+  /* ========== SIDEBAR ========== */
+  --sidebar-bg:           var(--nomba-teal);
+  --sidebar-text:         rgba(255,255,255,0.75);
+  --sidebar-text-active:  #FFFFFF;
+  --sidebar-active-bg:    rgba(200, 255, 0, 0.15);
+  --sidebar-active-border:var(--nomba-lime);
+  --sidebar-hover-bg:     rgba(255,255,255,0.06);
 
   /* ========== SPACING ========== */
   --space-xs: 4px;
@@ -36,27 +75,60 @@
   --space-2xl: 48px;
 
   /* ========== LAYOUT ========== */
-  --sidebar-width: 240px;
-  --topbar-height: 64px;
+  --sidebar-width:  248px;
+  --topbar-height:  64px;
 
   /* ========== TYPOGRAPHY ========== */
   --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-size-xs: 11px;
-  --font-size-sm: 12px;
+  --font-size-xs:   11px;
+  --font-size-sm:   12px;
   --font-size-base: 14px;
-  --font-size-lg: 16px;
-  --font-size-xl: 20px;
-  --font-size-2xl: 28px;
+  --font-size-lg:   16px;
+  --font-size-xl:   20px;
+  --font-size-2xl:  28px;
 
-  --font-weight-regular: 400;
-  --font-weight-medium: 500;
+  --font-weight-regular:  400;
+  --font-weight-medium:   500;
   --font-weight-semibold: 600;
+  --font-weight-bold:     700;
 
   /* ========== SHADOWS ========== */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.08);
-  --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.12);
+  --shadow-sm:   0 1px 3px rgba(11,46,40,0.06), 0 1px 2px rgba(11,46,40,0.04);
+  --shadow-md:   0 4px 12px rgba(11,46,40,0.10), 0 2px 4px rgba(11,46,40,0.06);
+  --shadow-lg:   0 8px 24px rgba(11,46,40,0.14), 0 4px 8px rgba(11,46,40,0.08);
+  --shadow-lime: 0 0 20px rgba(200,255,0,0.35), 0 4px 12px rgba(200,255,0,0.20);
+  --shadow-card: 0 1px 4px rgba(11,46,40,0.07), 0 0 0 1px rgba(11,46,40,0.05);
 }
+
+/* ========== DARK THEME OVERRIDES ========== */
+[data-theme="dark"] {
+  /* ========== BACKGROUNDS ========== */
+  --bg-primary:   #0B2E28; /* Nomba Dark Teal background */
+  --bg-secondary: #0F3D35; /* Nomba Teal Mid */
+  --bg-tertiary:  #164D42; /* Nomba Teal Light */
+  --bg-card:      #0F3D35;
+  --bg-page:      #0B2E28;
+
+  /* ========== TEXT ========== */
+  --text-primary:   #FFFFFF;
+  --text-secondary: #A3C2BB;
+  --text-muted:     #6E9189;
+
+  /* ========== ACCENT / PRIMARY ========== */
+  /* Since backgrounds are dark teal, lime text now has perfect contrast! */
+  --primary-on-light: var(--nomba-lime);
+
+  /* ========== BORDERS ========== */
+  --border-light:   #164D42;
+  --border-primary: #23695C;
+
+  /* ========== SHADOWS ========== */
+  --shadow-sm:   0 1px 3px rgba(0,0,0,0.25);
+  --shadow-md:   0 4px 12px rgba(0,0,0,0.35);
+  --shadow-lg:   0 8px 24px rgba(0,0,0,0.45);
+  --shadow-card: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
 
 /* ========== RESET & BASE ========== */
 *, *::before, *::after {
@@ -69,6 +141,7 @@ html {
   font-size: 14px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
 }
 
 body {
@@ -78,6 +151,7 @@ body {
   background: var(--bg-primary);
   line-height: 1.5;
   min-height: 100vh;
+  overflow-x: hidden;
 }
 
 a {
@@ -143,22 +217,31 @@ ul, ol {
 }
 
 .btn-primary {
-  background: var(--accent-primary);
-  color: white;
+  background: var(--nomba-lime);
+  color: var(--nomba-teal);
+  font-weight: var(--font-weight-semibold);
+  box-shadow: 0 1px 3px rgba(200,255,0,0.20);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: var(--accent-hover);
+  background: var(--nomba-lime-hover);
+  box-shadow: var(--shadow-lime);
+  transform: translateY(-1px);
+}
+
+.btn-primary:active:not(:disabled) {
+  transform: translateY(0);
 }
 
 .btn-secondary {
   background: transparent;
-  border: 1px solid var(--border-light);
+  border: 1px solid var(--border-primary);
   color: var(--text-primary);
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background: var(--bg-secondary);
+  background: var(--bg-tertiary);
+  border-color: var(--nomba-teal-light);
 }
 
 .btn-ghost {
@@ -234,7 +317,8 @@ ul, ol {
 }
 
 .input:focus {
-  border-color: var(--accent-primary);
+  border-color: var(--nomba-teal);
+  box-shadow: 0 0 0 3px rgba(11,46,40,0.08);
 }
 
 .input-error {
@@ -251,49 +335,62 @@ ul, ol {
 .card {
   background: var(--bg-primary);
   border: 1px solid var(--border-light);
-  border-radius: 12px;
+  border-radius: 14px;
   padding: var(--space-lg);
-  transition: background 150ms ease-out;
+  box-shadow: var(--shadow-card);
+  transition: box-shadow 200ms ease-out, transform 200ms ease-out;
 }
 
 .card-hover:hover {
-  background: var(--bg-secondary);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.shadow-premium {
+  box-shadow: var(--shadow-card);
 }
 
 /* ========== BADGES ========== */
 .badge {
   display: inline-flex;
   align-items: center;
-  padding: 2px 8px;
+  padding: 3px 10px;
   font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-medium);
+  font-weight: var(--font-weight-semibold);
   border-radius: 100px;
   white-space: nowrap;
+  letter-spacing: 0.2px;
 }
 
 .badge-success {
-  background: #DCFCE7;
-  color: #166534;
+  background: var(--success-bg);
+  color: var(--success-text);
 }
 
 .badge-warning {
-  background: #FEF3C7;
-  color: #92400E;
+  background: var(--warning-bg);
+  color: var(--warning-text);
 }
 
-.badge-error {
-  background: #FEE2E2;
-  color: #991B1B;
+.badge-error,
+.badge-danger {
+  background: var(--error-bg);
+  color: var(--error-text);
 }
 
 .badge-info {
-  background: #DBEAFE;
-  color: #1E40AF;
+  background: var(--info-bg);
+  color: var(--info-text);
 }
 
 .badge-neutral {
-  background: var(--bg-secondary);
+  background: var(--bg-tertiary);
   color: var(--text-secondary);
+}
+
+.badge-lime {
+  background: var(--nomba-lime-glow);
+  color: var(--nomba-teal);
 }
 
 /* ========== TABLES ========== */
@@ -330,6 +427,7 @@ tr:last-child td {
 
 tr:hover td {
   background: var(--bg-secondary);
+  transition: background 100ms ease;
 }
 
 /* ========== MODAL ========== */
@@ -571,5 +669,114 @@ tr:hover td {
 @media (min-width: 769px) {
   .show-on-mobile {
     display: none !important;
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* ========== RESPONSIVE PAGE UTILITIES ========== */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-xl);
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.page-header .page-header-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.filter-bar {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  padding: 12px 16px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: var(--space-lg);
+}
+
+.profile-grid,
+.bank-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.settings-grid {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+@media (max-width: 768px) {
+  .page-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .page-header h1 {
+    font-size: var(--font-size-xl) !important;
+  }
+
+  .profile-grid,
+  .bank-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .settings-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .filter-bar {
+    gap: 8px;
+    padding: 10px 12px;
+  }
+
+  /* Tables: clip to viewport and allow internal scroll */
+  .table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    /* Ensure it never causes the page to widen */
+    max-width: calc(100vw - 32px);
+    width: 100%;
+  }
+
+  /* Do NOT use white-space: nowrap — it causes horizontal page overflow */
+  /* Instead, truncate long text inside cells */
+  td {
+    padding: 10px 8px;
+    max-width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  th {
+    padding: 10px 8px;
+    white-space: nowrap;
+  }
+
+  /* Allow specific cells to wrap naturally */
+  td > div,
+  td > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
   }
 }

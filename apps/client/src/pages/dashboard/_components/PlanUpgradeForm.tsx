@@ -49,7 +49,7 @@ export default function PlanUpgradeForm({ profile, saving, onUpgrade }: Props) {
     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       <div style={{ borderBottom: '1px solid var(--border-light)', paddingBottom: 12 }}>
         <h3 style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Award size={16} color="var(--primary)" />
+          <Award size={16} color="var(--primary-on-light)" />
           Subscription Plan & Pricing Tier
         </h3>
         <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>

@@ -47,14 +47,14 @@ export default function InvoicesPage() {
   return (
     <div style={{ animation: 'fadeIn 300ms ease-out', padding: 'var(--space-md) 0' }}>
       {/* Top Header Section */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-xl)' }}>
+      <div className="page-header">
         <div>
           <h1 style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 600, color: 'var(--text-primary)', marginBottom: 4 }}>
             Invoices
           </h1>
           <p style={{ color: 'var(--text-secondary)' }}>Manage billing records, issue manual invoices, and download customer receipts.</p>
         </div>
-        <div style={{ display: 'flex', gap: 12 }}>
+        <div className="page-header-actions">
           <button className="btn btn-secondary" onClick={refreshAll} disabled={isLoading} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <RefreshCw size={14} className={isLoading ? 'animate-spin' : ''} />
             Refresh
@@ -144,9 +144,9 @@ export default function InvoicesPage() {
               <tr>
                 <th>Invoice #</th>
                 <th>Customer</th>
-                <th>Billing Date</th>
+                <th className="hide-on-mobile">Billing Date</th>
                 <th>Amount</th>
-                <th>Method</th>
+                <th className="hide-on-mobile">Method</th>
                 <th>Status</th>
                 <th style={{ textAlign: 'right' }}>Actions</th>
               </tr>
@@ -167,7 +167,7 @@ export default function InvoicesPage() {
                       </div>
                     </div>
                   </td>
-                  <td>
+                  <td className="hide-on-mobile">
                     <div style={{ fontSize: 13 }}>
                       {new Date(invoice.createdAt).toLocaleDateString()}
                     </div>
@@ -175,7 +175,7 @@ export default function InvoicesPage() {
                   <td style={{ fontWeight: 600 }}>
                     {invoice.currency} {Number(invoice.totalAmount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                   </td>
-                  <td style={{ textTransform: 'capitalize', fontSize: 12 }}>
+                  <td className="hide-on-mobile" style={{ textTransform: 'capitalize', fontSize: 12 }}>
                     {invoice.paymentMethod.replace('_', ' ')}
                   </td>
                   <td>
